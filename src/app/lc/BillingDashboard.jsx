@@ -12,21 +12,19 @@ function BillingDashboard({ tenantId }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-      if (tenantId) loadData()
-    }, [tenantId])
+    if (tenantId) loadData()
+  }, [tenantId])
 
-  useEffect(() => {
-    if (!tenantId) return
-    setLoading(prev => ({ ...prev, history: true }))
-    getBalanceHistory(tenantId, historyPage * HISTORY_LIMIT, HISTORY_LIMIT)
-      .then(data => { setHistory(data); setLoading(prev => ({ ...prev, history: false })) })
-      .catch(() => setLoading(prev => ({ ...prev, history: false })))
-  }, [tenantId, historyPage])
 
   const loadData = async () => {
     try {
       setError('')
-      const balanceData = await getBalance(tenantId)
+      let balanceData
+      try {
+        balanceData = await getBalance(tenantId)
+      } catch {
+        balanceData = await getBalance(tenantId)
+      }
       setBalance(balanceData)
       setLoading(prev => ({ ...prev, balance: false }))
 
@@ -53,7 +51,12 @@ function BillingDashboard({ tenantId }) {
     })
   }
 
-  if (error) return <div className="dashboard error">{error}</div>
+  if (error) return (
+  <div className="dashboard">
+    <div className="error" style={{ marginBottom: '12px' }}>{error}</div>
+    <button className="btn btn-secondary" onClick={loadData}>Повторить</button>
+  </div>
+)
 
   const cardStyle = {
     background: 'white',

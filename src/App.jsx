@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import Shell from './components/Shell'
 import Login from './pages/Login'
 import Profile from './app/lc/Profile'
@@ -24,15 +24,11 @@ import NotificationSettings from './app/lc/NotificationSettings'
 
 function CompaniesPage() {
   const navigate = useNavigate()
+  const { tenantId } = useAuth()
   const [currentTenant, setCurrentTenant] = useState(null)
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) return
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      if (payload.tenant_id) setCurrentTenant({ id: payload.tenant_id })
-    } catch {}
-  }, [])
+    if (tenantId) setCurrentTenant({ id: tenantId })
+  }, [tenantId])
   return (
     <TenantList
       currentTenantId={currentTenant?.id}
@@ -49,23 +45,8 @@ function CompaniesPage() {
   )
 }
 
-
-
-function useTenantId() {
-  const [tenantId, setTenantId] = useState(null)
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) return
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      if (payload.tenant_id) setTenantId(payload.tenant_id)
-    } catch {}
-  }, [])
-  return tenantId
-}
-
 function NotificationsPage() {
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   const [settings, setSettings] = useState([])
   if (!tenantId) return <div style={{padding:'2rem'}}>Сначала активируйте компанию в разделе «Компании»</div>
   return (
@@ -77,21 +58,21 @@ function NotificationsPage() {
 }
 
 function BillingPage() {
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   if (!tenantId) return <div style={{padding:'2rem'}}>Сначала активируйте компанию в разделе «Компании»</div>
   return <BillingDashboard tenantId={tenantId} />
 }
 
 function LinesPage() {
   const navigate = useNavigate()
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   if (!tenantId) return <div style={{padding:'2rem'}}>Сначала активируйте компанию в разделе «Компании»</div>
   return <LineList tenantId={tenantId} onCreateClick={() => navigate('/lc/lines/create')} onLineClick={(line) => navigate(`/lc/lines/${line.id}`)} />
 }
 
 function LinesCreatePage() {
   const navigate = useNavigate()
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   if (!tenantId) return null
   return <CreateLine tenantId={tenantId} onCreated={(order) => navigate(`/lc/lines/${order.lineId}/payment`, { state: order })} onCancel={() => navigate('/lc/lines')} />
 }
@@ -99,7 +80,7 @@ function LinesCreatePage() {
 function LineDetailsPage() {
   const { lineId } = useParams()
   const navigate = useNavigate()
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   if (!tenantId) return null
   return <LineDetails tenantId={tenantId} lineId={lineId} onBack={() => navigate('/lc/lines')} onDeleted={() => navigate('/lc/lines')} />
 }
@@ -107,7 +88,7 @@ function LineDetailsPage() {
 function LineChannelPage() {
   const { lineId, channelType } = useParams()
   const navigate = useNavigate()
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   if (!tenantId) return null
   return <ChannelAccount tenantId={tenantId} lineId={lineId} channelType={channelType} onBack={() => navigate(`/lc/lines/${lineId}`)} />
 }
@@ -115,7 +96,7 @@ function LineChannelPage() {
 function LineRenewPage() {
   const { lineId } = useParams()
   const navigate = useNavigate()
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   const [accounts, setAccounts] = useState([])
   useEffect(() => {
     if (tenantId) getChannelAccount(tenantId, lineId).then(d => setAccounts(Array.isArray(d) ? d : [d])).catch(() => {})
@@ -127,7 +108,7 @@ function LineRenewPage() {
 function LineAddChannelPage() {
   const { lineId } = useParams()
   const navigate = useNavigate()
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   const [accounts, setAccounts] = useState([])
   useEffect(() => {
     if (tenantId) getChannelAccount(tenantId, lineId).then(d => setAccounts(Array.isArray(d) ? d : [d])).catch(() => {})
@@ -137,7 +118,7 @@ function LineAddChannelPage() {
 }
 
 function LinePaymentPage() {
-  const tenantId = useTenantId()
+  const { tenantId } = useAuth()
   if (!tenantId) return null
   return <PaymentFormWrapper tenantId={tenantId} />
 }
