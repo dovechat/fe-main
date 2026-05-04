@@ -6,7 +6,7 @@ export default defineConfig({
   base: '/',
   server: {
     port: 5173,
-    allowedHosts: ['tg.dove-chat.com'],
+    allowedHosts: 'all'
   },
   build: {
     outDir: 'dist',
