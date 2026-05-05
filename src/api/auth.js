@@ -29,3 +29,16 @@ export const login = async (username, password) => {
 
   return await response.json()
 }
+
+export const verify = async (token, code) => {
+  const response = await fetch(`${API_URL}/auth/verify?code=${code}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || 'Ошибка верификации')
+  }
+  return await response.json()
+}
