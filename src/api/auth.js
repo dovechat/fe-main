@@ -1,6 +1,12 @@
 import apiClient from '../services/client'
+import accountClient from '../services/accountClient'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8070'
+
+export const register = async (email, phone, password, ifsms) => {
+  const response = await accountClient.post('/auth/register', { email, phone, password, ifsms })
+  return response.data
+}
 
 export const login = async (username, password) => {
   const formData = new URLSearchParams()
