@@ -83,7 +83,7 @@ function CreateTenant({ onCreated, onCancel }) {
             }}
           >
             <option value="acquiring">Эквайринг</option>
-            <option value="invoice">Счёт</option>
+            <option value="wire">Счёт</option>
           </select>
         </div>
 

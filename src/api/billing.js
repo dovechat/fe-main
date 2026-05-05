@@ -22,7 +22,7 @@ export const getPayments = async (tenantId, skip = 0, limit = 100) => {
 export const createPayment = async (tenantId, amount) => {
   const response = await accountClient.post(`/tenants/${tenantId}/billing/payments`, {
     amount,
-    payment_method: 'invoice',
+    payment_method: 'wire',
   })
   return response.data
 }

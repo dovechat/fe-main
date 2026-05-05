@@ -84,7 +84,7 @@ function EditTenant({ tenant, onSaved, onCancel }) {
             }}
           >
             <option value="acquiring">Эквайринг</option>
-            <option value="invoice">Счёт</option>
+            <option value="wire">Счёт</option>
           </select>
         </div>
 
