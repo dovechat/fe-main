@@ -3,8 +3,8 @@ import accountClient from '../services/accountClient'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8070'
 
-export const register = async (email, phone, password, ifsms) => {
-  const response = await accountClient.post('/auth/register', { email, phone, password, ifsms })
+export const register = async (email, phone, ifsms) => {
+  const response = await accountClient.post('/auth/register', { email, phone, ifsms })
   return response.data
 }
 
@@ -41,4 +41,13 @@ export const verify = async (token, code) => {
     throw new Error(error.detail || 'Ошибка верификации')
   }
   return await response.json()
+}
+
+export const setPassword = async (tempToken, password) => {
+  const response = await accountClient.post(
+    '/auth/set-password',
+    { password },
+    { headers: { Authorization: `Bearer ${tempToken}` } }
+  )
+  return response.data
 }

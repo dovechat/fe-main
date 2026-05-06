@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { register as apiRegister, verify as apiVerify } from '../api/auth'
+import { register as apiRegister, verify as apiVerify, setPassword as apiSetPassword } from '../api/auth'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  // mode: 'login' | 'register' | 'verify'
+  // mode: 'login' | 'register' | 'verify' | 'set-password'
   const [mode, setMode] = useState('login')
-  const [values, setValues] = useState({ email: '', phone: '+', password: '', ifsms: false })
+  const [values, setValues] = useState({ email: '', phone: '+', ifsms: false })
+  const [passwords, setPasswords] = useState({ password: '', confirm: '' })
+  const [loginValues, setLoginValues] = useState({ email: '', password: '' })
   const [code, setCode] = useState('')
   const [tempToken, setTempToken] = useState(null)
   const [error, setError] = useState('')
@@ -21,10 +23,21 @@ export default function Login() {
     if (error) setError('')
   }
 
+  const handleLoginChange = (e) => {
+    setLoginValues(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    if (error) setError('')
+  }
+
+  const handlePasswordChange = (e) => {
+    setPasswords(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    if (error) setError('')
+  }
+
   const switchMode = (m) => {
     setMode(m)
     setError('')
-    setValues({ email: '', phone: '+', password: '', ifsms: false })
+    setValues({ email: '', phone: '+', ifsms: false })
+    setPasswords({ password: '', confirm: '' })
     setCode('')
     setTempToken(null)
   }
@@ -33,7 +46,7 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     try {
-      await login(values.email, values.password)
+      await login(loginValues.email, loginValues.password)
       navigate('/chats')
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Ошибка входа')
@@ -48,7 +61,7 @@ export default function Login() {
     if (digits.length < 9) { setError('Телефон должен содержать минимум 9 цифр'); return }
     setLoading(true)
     try {
-      const data = await apiRegister(values.email, values.phone, values.password, values.ifsms)
+      const data = await apiRegister(values.email, values.phone, values.ifsms)
       setTempToken(data.access_token)
       setMode('verify')
       setError('')
@@ -64,10 +77,27 @@ export default function Login() {
     setLoading(true)
     try {
       await apiVerify(tempToken, code)
-      await login(values.email, values.password)
-      navigate('/chats')
+      setMode('set-password')
+      setError('')
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Неверный код')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const onSubmitSetPassword = async (e) => {
+    e.preventDefault()
+    if (passwords.password !== passwords.confirm) { setError('Пароли не совпадают'); return }
+    if (passwords.password.length < 8) { setError('Пароль минимум 8 символов'); return }
+    setLoading(true)
+    try {
+      const data = await apiSetPassword(tempToken, passwords.password)
+      // После установки пароля — логиним с полученным токеном
+      await login(values.email, passwords.password)
+      navigate('/chats')
+    } catch (err) {
+      setError(err.response?.data?.detail || err.message || 'Ошибка установки пароля')
     } finally {
       setLoading(false)
     }
@@ -83,7 +113,10 @@ export default function Login() {
         </div>
 
         <h2 className="login-title">
-          {mode === 'login' ? 'Вход' : mode === 'register' ? 'Регистрация' : 'Подтверждение email'}
+          {mode === 'login' && 'Вход'}
+          {mode === 'register' && 'Регистрация'}
+          {mode === 'verify' && 'Подтверждение email'}
+          {mode === 'set-password' && 'Установка пароля'}
         </h2>
 
         {/* Вход */}
@@ -91,11 +124,11 @@ export default function Login() {
           <form onSubmit={onSubmitLogin} autoComplete="off">
             <div className="login-field">
               <label>Email</label>
-              <input type="email" name="email" value={values.email} onChange={handleChange} required placeholder="you@example.com" />
+              <input type="email" name="email" value={loginValues.email} onChange={handleLoginChange} required placeholder="you@example.com" />
             </div>
             <div className="login-field">
               <label>Пароль</label>
-              <input type="password" name="password" value={values.password} onChange={handleChange} required autoComplete="new-password" />
+              <input type="password" name="password" value={loginValues.password} onChange={handleLoginChange} required autoComplete="current-password" />
             </div>
             {error && <div className="login-error">{error}</div>}
             <button type="submit" className="login-btn" disabled={loading}>
@@ -114,10 +147,6 @@ export default function Login() {
             <div className="login-field">
               <label>Телефон</label>
               <input type="tel" name="phone" value={values.phone} onChange={handleChange} required placeholder="+79991234567" />
-            </div>
-            <div className="login-field">
-              <label>Пароль (минимум 8 символов)</label>
-              <input type="password" name="password" value={values.password} onChange={handleChange} required autoComplete="new-password" minLength={8} />
             </div>
             <div className="login-field">
               <label style={{ display: 'flex', gap: '8px', fontWeight: 'normal', cursor: 'pointer' }}>
@@ -149,7 +178,25 @@ export default function Login() {
           </form>
         )}
 
-        {/* Ссылки переключения */}
+        {/* Установка пароля */}
+        {mode === 'set-password' && (
+          <form onSubmit={onSubmitSetPassword} autoComplete="off">
+            <div className="login-field">
+              <label>Пароль</label>
+              <input type="password" name="password" value={passwords.password} onChange={handlePasswordChange} required autoComplete="new-password" minLength={8} />
+            </div>
+            <div className="login-field">
+              <label>Подтверждение пароля</label>
+              <input type="password" name="confirm" value={passwords.confirm} onChange={handlePasswordChange} required autoComplete="new-password" />
+            </div>
+            {error && <div className="login-error">{error}</div>}
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? '...' : 'Сохранить и войти'}
+            </button>
+          </form>
+        )}
+
+        {/* Ссылки */}
         <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: '#666' }}>
           {mode === 'login' && (
             <>Нет аккаунта?{' '}
