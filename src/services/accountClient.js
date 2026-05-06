@@ -11,4 +11,13 @@ accountClient.interceptors.request.use((config) => {
   return config
 })
 
+accountClient.interceptors.response.use(
+  r => r,
+  error => {
+    const msg = error.response?.data?.detail
+    if (msg && typeof msg === 'string') alert(msg)
+    return Promise.reject(error)
+  }
+)
+
 export default accountClient

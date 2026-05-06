@@ -134,7 +134,7 @@ function MembersList({ tenantId }) {
             <div key={member.id} style={{ borderBottom: '1px solid #eee', padding: '12px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div><strong>{member.user?.email || member.user_id}</strong></div>
+                  <div><strong>{member.email || member.user_id}</strong></div>
                   <div style={{ fontSize: '12px', color: '#666' }}>Роль: {member.role}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>

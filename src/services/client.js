@@ -35,6 +35,8 @@ client.interceptors.response.use(
       localStorage.clear()
       window.location.href = '/login'
     }
+    const msg = error.response?.data?.detail
+    if (msg && typeof msg === 'string') alert(msg)
     return Promise.reject(error)
   }
 )
