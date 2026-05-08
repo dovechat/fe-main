@@ -295,7 +295,7 @@ const handleConnectInstance = async () => {
   try {
     setQrLoading(true)
     const response = await apiClient.post(
-      `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
+      `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
     )
     setQrCode(response.data.qr.qr)
     await updateWhatsAppGreen(tenantId, lineId, {})
