@@ -148,13 +148,15 @@ function LineList({ tenantId, onCreateClick, onLineClick }) {
                   <div style={{ display: 'flex', gap: '24px', marginBottom: '12px' }}>
                     <div>
                       <div style={{ fontSize: '12px', color: '#666' }}>Тип канала</div>
-                      <div style={{ fontSize: '14px', fontWeight: '500' }}>
-                        {line.channel_type === 'telegram_bot' ? 'Telegram Bot' :
-                         line.channel_type === 'telegram_user' ? 'Telegram User' :
-                         line.channel_type === 'whatsapp_green' ? 'WhatsApp Green API' :
-                         line.channel_type === 'whatsapp_business' ? 'WhatsApp Business' :
-                         line.channel_type === 'vk' ? 'VK' : line.channel_type}
-                      </div>
+                        <div style={{ fontSize: '14px', fontWeight: '500' }}>
+                          {(line.channel_types || []).map(ct =>
+                            ct === 'telegram_bot' ? 'Telegram Bot' :
+                            ct === 'telegram_user' ? 'Telegram User' :
+                            ct === 'whatsapp_green' ? 'WhatsApp Green API' :
+                            ct === 'whatsapp_business' ? 'WhatsApp Business' :
+                            ct === 'vk' ? 'VK' : ct
+                          ).join(', ')}
+                        </div>
                     </div>
                     <div>
                       <div style={{ fontSize: '12px', color: '#666' }}>Статус подключения</div>
