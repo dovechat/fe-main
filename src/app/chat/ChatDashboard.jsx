@@ -108,6 +108,7 @@ export default function ChatDashboard() {
     telegram_bot: 'Telegram Bot',
     whatsapp_green: 'WhatsApp Green',
     waba: 'WABA',
+    vk: 'VK',
   };
 
   const lines = useMemo(() => {
@@ -343,10 +344,12 @@ const channels = useMemo(() => {
             {/* МОДАЛКА: ввод телефона */}
             {selectedChannel && selectedChannel !== 'telegram_bot' && (
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '13px', color: colors.secondaryText, marginBottom: '8px' }}>Номер телефона</div>
+                <div style={{ fontSize: '13px', color: colors.secondaryText, marginBottom: '8px' }}>
+                  {selectedChannel === 'vk' ? 'ID пользователя ВКонтакте' : 'Номер телефона'}
+                </div>
                 <input
                   type="text"
-                  placeholder="+79991234567"
+                  placeholder={selectedChannel === 'vk' ? '123456789' : '+79991234567'}
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
                   style={{ ...styles.input, width: '100%', padding: '10px 12px', fontSize: '14px', fontFamily: sf, boxSizing: 'border-box' }}

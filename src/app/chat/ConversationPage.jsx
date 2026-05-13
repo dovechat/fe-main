@@ -146,6 +146,7 @@ export default function ConversationPage({ conversationId }) {
       telegram_bot: '/messages/tgbot',
       whatsapp_green: '/messages/whatsapp/green',
       waba: '/messages/waba',
+      vk: '/messages/vk',
     };
     const endpoint = endpoints[conversation?.crm_type] || '/messages/tguser';
     const formData = new FormData();

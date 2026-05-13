@@ -450,6 +450,21 @@ const pollGreenStatus = () => {
               onChange={handleChange}
               placeholder="123456789"
             />
+            <Input
+              label="Секретный ключ"
+              name="secret_key"
+              value={credentials.secret_key || ''}
+              onChange={handleChange}
+              placeholder="Секретный ключ callback"
+            />
+            <Input
+              label="Код подтверждения"
+              name="confirmation_code"
+              value={credentials.confirmation_code || ''}
+              onChange={handleChange}
+              placeholder="f6ec725d"
+            />
+
             <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
               Получите токен в <a href="https://vk.com/apps?act=manage" target="_blank" rel="noreferrer">настройках приложения VK</a>
             </div>

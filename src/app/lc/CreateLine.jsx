@@ -9,7 +9,7 @@ const CHANNEL_TYPES = [
   { value: 'telegram_user', label: 'Telegram User', icon: '👤' },
   { value: 'whatsapp_green', label: 'WhatsApp Green', icon: '📲' },
   { value: 'waba', label: 'WhatsApp Business', icon: '💼' },
-  // { value: 'vk', label: 'VK', icon: '👥' },
+  { value: 'vk', label: 'VK', icon: '👥' },
 ]
 
 // channelSelections: { [channel_type]: { enabled: bool, period: 'month'|'year', is_demo: bool } }

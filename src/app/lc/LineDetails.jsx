@@ -44,7 +44,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const handleCleanup = async () => {
     if (!confirm('Очистить линию? Все каналы будут удалены.')) return;
     try {
-      await apiClient.post(`/api/v1/tenants/${tenantId}/lines/${line.id}/account/cleanup`);
+      await apiClient.post(`/tenants/${tenantId}/lines/${line.id}/account/cleanup`);
       alert('Линия очищена');
       onBack();
     } catch {
@@ -57,6 +57,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     { type: 'telegram_bot', label: 'Telegram Bot', icon: '🤖' },
     { type: 'whatsapp_green', label: 'WhatsApp Green', icon: '📱' },
     { type: 'waba', label: 'WABA', icon: '💼' },
+    { type: 'vk', label: 'VK', icon: '👥' },
   ]
 
   const getConnectionStatusStyle = (status) => {
