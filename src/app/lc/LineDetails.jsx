@@ -388,7 +388,7 @@ const handleToggleConnection = async (channelType) => {
           ))}
 
 
-          {accounts.length < 4 && (
+          {accounts.length < 5 && (
               <div
               onClick={() => navigate(`/lc/lines/${lineId}/add-channel`)}
               style={{

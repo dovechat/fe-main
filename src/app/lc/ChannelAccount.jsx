@@ -432,44 +432,56 @@ const pollGreenStatus = () => {
           </>
         )
       
-      case 'vk':
-        return (
-          <>
-            <Input
-              label="Access Token"
-              name="access_token"
-              value={credentials.access_token || ''}
-              onChange={handleChange}
-              required
-              placeholder="vk1.a.abcdef..."
-            />
-            <Input
-              label="ID группы (опционально)"
-              name="group_id"
-              value={credentials.group_id || ''}
-              onChange={handleChange}
-              placeholder="123456789"
-            />
-            <Input
-              label="Секретный ключ"
-              name="secret_key"
-              value={credentials.secret_key || ''}
-              onChange={handleChange}
-              placeholder="Секретный ключ callback"
-            />
-            <Input
-              label="Код подтверждения"
-              name="confirmation_code"
-              value={credentials.confirmation_code || ''}
-              onChange={handleChange}
-              placeholder="f6ec725d"
-            />
+case 'vk':
+  return (
+    <div  style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
+      <div  style={{ width: '200px', flexShrink: 0 }}>
+        <Input
+          label="Access Token"
+          name="access_token"
+          value={credentials.access_token || ''}
+          onChange={handleChange}
+          required
+          placeholder="vk1.a.abcdef..."
+        />
 
-            <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
-              Получите токен в <a href="https://vk.com/apps?act=manage" target="_blank" rel="noreferrer">настройках приложения VK</a>
-            </div>
-          </>
-        )
+        <Input
+          label="ID группы (опционально)"
+          name="group_id"
+          value={credentials.group_id || ''}
+          onChange={handleChange}
+          placeholder="123456789"
+        />
+
+        <Input
+          label="Код подтверждения"
+          name="confirmation_code"
+          value={credentials.confirmation_code || ''}
+          onChange={handleChange}
+          placeholder="f6ec725d"
+        />
+
+        <Input
+          label="Секретный ключ"
+          name="secret_key"
+          value={credentials.secret_key || ''}
+          onChange={handleChange}
+          placeholder="Секретный ключ callback"
+        />
+      </div>
+
+      <div style={{ flex: 1, fontSize: '13px', color: '#666' }}>
+        Получите эти параметры в настройках приложения VK: <br />
+        - главная страница VK - сообщества - ваша группа - управление - дополнительно - работа с API.<br />
+        <b>Access Token</b> - во вкладке "Ключи доступа"<br />
+        остальные параметры - во вкладке Callback API:<br />
+        <b>ID группы</b> - в сером блоке с текстом "Для получения ..." "type": "confirmation", "group_id": 123456789.<br />
+        <b> Код подтверждения</b>  - сразу под ним "Строка, которую должен вернуть сервер: 987654321"<br />
+        <b> Секретный ключ</b>  придумайте сами, сохраните его у себя, введите в одноименное поле и нажмите кнопку "Сохранить".<br />
+        <b style={{color: "red"}}> Внимание!</b>  Кнопку "Подтвердить" нажимать не нужно.
+      </div>
+    </div>
+  )
       
       case 'whatsapp_green':
         return (
@@ -547,7 +559,7 @@ const pollGreenStatus = () => {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
+    <div className="container" style={{ maxWidth: channelType === 'vk' ? '1000px' : '500px', margin: '40px auto' }}>
       <div style={{ marginBottom: '20px' }}>
         <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
           ← Назад к линии
