@@ -126,6 +126,15 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     loadAccounts()
   }, [tenantId, line?.id])
 
+
+  const expiresAt = useMemo(() => {
+    if (!accounts.length) return null;
+    const dates = accounts.map(c => c.expires_at ? new Date(c.expires_at) : null).filter(Boolean);
+    if (!dates.length) return null;
+    return new Date(Math.max(...dates));
+  }, [accounts]);
+
+
   const loadLine = async () => {
     try {
       setLoading(true)
@@ -292,7 +301,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
             <div>
               <p className="dc-muted-xs" style={{ margin: 0 }}>Оплачено до</p>
               <p style={{ margin: '0.15rem 0 0', fontSize: '1.125rem', fontWeight: 600 }}>
-                {line.expires_at ? formatDate(line.expires_at) : '—'}
+                {expiresAt ? formatDate(expiresAt) : '—'}
               </p>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
