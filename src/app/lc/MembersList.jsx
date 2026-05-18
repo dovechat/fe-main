@@ -1,15 +1,29 @@
 import { useState, useEffect } from 'react'
-import Button from './Button'
-import Input from './Input'
+import { Plus, Edit, Trash2 } from 'lucide-react'
 import { getMembers, addMember, removeMember } from '../../api/members'
 import { getUserLinePermissions, addLinePermission, removeLinePermission } from '../../api/line-permissions'
 import { getLines } from '../../api/lines'
 
-function MembersList({ tenantId }) {
+function roleLabel(role) {
+  if (role === 'admin') return 'Администратор'
+  if (role === 'member') return 'Сотрудник'
+  return role || '—'
+}
+
+function initials(m) {
+  const name = m.name || m.user?.email || m.email || ''
+  const parts = name.split(/[\s@]+/).filter(Boolean)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase() || '?'
+}
+
+function MembersList({ tenantId, onCountChange }) {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newMember, setNewMember] = useState({ email: '', role: 'member' })
+  const [addMemberError, setAddMemberError] = useState('')
+  const [addMemberLoading, setAddMemberLoading] = useState(false)
   const [expandedMember, setExpandedMember] = useState(null)
   const [linePermissions, setLinePermissions] = useState({})
   const [allLines, setAllLines] = useState([])
@@ -20,34 +34,47 @@ function MembersList({ tenantId }) {
   }, [tenantId])
 
   const loadMembers = async () => {
+    setLoading(true)
     try {
-      setLoading(true)
       const data = await getMembers(tenantId)
-      setMembers(data)
+      const list = Array.isArray(data) ? data : []
+      setMembers(list)
+      onCountChange?.(list.length)
     } catch (error) {
       console.error('Failed to load members:', error)
+      setMembers([])
+      onCountChange?.(0)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleAddMember = async (e) => {
-    e.preventDefault()
+  const handleAddMember = async () => {
+    setAddMemberError('')
+    const email = newMember.email.trim()
+    if (!email) {
+      setAddMemberError('Укажите email')
+      return
+    }
+    setAddMemberLoading(true)
     try {
-      await addMember(tenantId, newMember)
+      await addMember(tenantId, { email, role: newMember.role })
       setShowAddForm(false)
       setNewMember({ email: '', role: 'member' })
-      loadMembers()
+      await loadMembers()
     } catch (error) {
-      console.error('Failed to add member:', error)
+      setAddMemberError(error?.message || 'Не удалось добавить сотрудника')
+    } finally {
+      setAddMemberLoading(false)
     }
   }
 
   const handleRemoveMember = async (userId) => {
-    if (!confirm('Удалить сотрудника?')) return
+    if (!userId) return
+    if (!window.confirm('Удалить сотрудника?')) return
     try {
       await removeMember(tenantId, userId)
-      loadMembers()
+      await loadMembers()
     } catch (error) {
       console.error('Failed to remove member:', error)
     }
@@ -60,144 +87,185 @@ function MembersList({ tenantId }) {
       setExpandedMember(userId)
       setLoadingLines(true)
       try {
-        // Загружаем все линии компании
         const lines = await getLines(tenantId)
-        setAllLines(lines)
-        
-        // Загружаем доступы сотрудника
+        setAllLines(Array.isArray(lines) ? lines : [])
         const perms = await getUserLinePermissions(tenantId, userId)
-        setLinePermissions(prev => ({ ...prev, [userId]: perms }))
+        setLinePermissions((prev) => ({ ...prev, [userId]: perms }))
       } catch (error) {
         console.error('Failed to load lines/permissions:', error)
+        setAllLines([])
       } finally {
         setLoadingLines(false)
       }
     }
   }
 
-  if (loading) return <div>Загрузка...</div>
+  if (loading) {
+    return <p className="dc-muted">Загрузка сотрудников…</p>
+  }
 
   return (
-    <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      
-
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px', margin: 0 }}>
-          Сотрудники
-        </h3>
-        <Button 
-          variant="success" 
-          onClick={() => setShowAddForm(true)}
-          style={{ fontSize: '14px', padding: '6px 12px', width: '70%'}}
+    <div className="dc-members-block">
+      <div className="dc-detail-toolbar dc-detail-toolbar--plain">
+        <button
+          type="button"
+          className="dc-btn dc-btn-primary"
+          onClick={() => {
+            setShowAddForm((v) => !v)
+            setAddMemberError('')
+          }}
         >
-          + Добавить сотрудника
-        </Button>
+          <Plus size={18} />
+          {showAddForm ? 'Свернуть' : 'Добавить сотрудника'}
+        </button>
       </div>
 
-
-
-
-
       {showAddForm && (
-        <form onSubmit={handleAddMember} style={{ marginBottom: '20px', padding: '16px', background: '#f5f7fa', borderRadius: '8px' }}>
-          <Input
-            label="Email"
-            type="email"
-            value={newMember.email}
-            onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
-            required
-          />
-          <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px' }}>Роль</label>
+        <div className="dc-add-member-panel">
+          <div className="form-group">
+            <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Email</label>
+            <input
+              className="dc-input"
+              type="email"
+              value={newMember.email}
+              onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+              autoComplete="email"
+              disabled={addMemberLoading}
+            />
+          </div>
+          <div className="form-group">
+            <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Роль</label>
             <select
+              className="dc-select"
               value={newMember.role}
               onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+              disabled={addMemberLoading}
             >
               <option value="member">Сотрудник</option>
               <option value="admin">Администратор</option>
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button type="submit" variant="primary">Добавить</Button>
-            <Button type="button" variant="secondary" onClick={() => setShowAddForm(false)}>Отмена</Button>
+          {addMemberError && (
+            <p className="error" style={{ margin: '0 0 0.75rem' }}>{addMemberError}</p>
+          )}
+          <div className="dc-detail-toolbar" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+            <button
+              type="button"
+              className="dc-btn dc-btn-outline"
+              disabled={addMemberLoading}
+              onClick={() => {
+                setShowAddForm(false)
+                setAddMemberError('')
+                setNewMember({ email: '', role: 'member' })
+              }}
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="dc-btn dc-btn-primary"
+              disabled={addMemberLoading}
+              onClick={handleAddMember}
+            >
+              {addMemberLoading ? '…' : 'Добавить'}
+            </button>
           </div>
-        </form>
+        </div>
       )}
 
       {members.length === 0 ? (
-        <p style={{ color: '#666' }}>Нет сотрудников</p>
+        <p className="dc-muted" style={{ marginTop: '0.75rem' }}>Нет сотрудников</p>
       ) : (
-        <div>
-          {members.map((member) => (
-            <div key={member.id} style={{ borderBottom: '1px solid #eee', padding: '12px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div><strong>{member.email || member.user_id}</strong></div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>Роль: {member.role}</div>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button variant="secondary" onClick={() => toggleMemberLines(member.user_id)}>
-                    {expandedMember === member.user_id ? 'Скрыть линии' : 'Линии'}
-                  </Button>
-                  <Button variant="danger" onClick={() => handleRemoveMember(member.user_id)}>
-                    Удалить
-                  </Button>
-                </div>
-              </div>
-
-
-
-
-
-              {expandedMember === member.user_id && (
-                <div style={{ marginTop: '12px', padding: '12px', background: '#f5f7fa', borderRadius: '8px' }}>
-                  {loadingLines ? (
-                    <p style={{ color: '#666', fontSize: '14px' }}>Загрузка линий...</p>
-                  ) : (
-                    <div>
-                      <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Доступные линии</h4>
-                      {allLines.map(line => {
-                        const hasAccess = linePermissions[member.user_id]?.some(
-                          perm => perm.line_id === line.id
-                        )
-                        return (
-                          <div key={line.id} style={{ marginBottom: '8px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <input
-                                type="checkbox"
-                                checked={hasAccess}
-                                onChange={async (e) => {
-                                  if (e.target.checked) {
-                                    await addLinePermission(tenantId, {
-                                      user_id: member.user_id,
-                                      line_id: line.id,
-                                      action: 'send'
-                                    })
-                                  } else {
-                                    await removeLinePermission(tenantId, member.user_id, line.id)
-                                  }
-                                  // Перезагрузить доступы после изменения
-                                  const perms = await getUserLinePermissions(tenantId, member.user_id)
-                                  setLinePermissions(prev => ({ ...prev, [member.user_id]: perms }))
-                                }}
-                              />
-                              {line.name}
-                            </label>
-                          </div>
-                        )
-                      })}
+        <div className="dc-company-grid" style={{ marginTop: '0.75rem' }}>
+          {members.map((member) => {
+            const uid = member.user_id || member.id
+            const email = member.user?.email || member.email || uid || '—'
+            return (
+              <div key={uid} className="dc-perm-card">
+                <div className="dc-perm-row">
+                  <div className="dc-perm-main">
+                    <div className="dc-avatar dc-avatar-sm">{initials(member)}</div>
+                    <div className="dc-perm-text">
+                      <p className="dc-perm-email" title={email}>{email}</p>
+                      <p className="dc-muted-xs" style={{ margin: '0.2rem 0 0' }}>
+                        {member.role === 'admin' || member.role === 'owner' ? 'Полный доступ' : 'Ограниченный доступ'}
+                      </p>
                     </div>
-                  )}
+                  </div>
+                  <div className="dc-perm-aside">
+                    <span className={member.role === 'admin' ? 'dc-badge dc-badge-green' : 'dc-badge dc-badge-neutral'}>
+                      {roleLabel(member.role)}
+                    </span>
+                    <div className="dc-perm-actions">
+                      <button
+                        type="button"
+                        className="dc-btn dc-btn-outline dc-btn-sm"
+                        onClick={() => toggleMemberLines(uid)}
+                      >
+                        {expandedMember === uid ? 'Скрыть' : 'Линии'}
+                      </button>
+                      <button type="button" className="dc-btn-ghost" aria-label="Изменить" title="Скоро" disabled>
+                        <Edit size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="dc-btn-ghost dc-btn-ghost-danger"
+                        aria-label="Удалить"
+                        onClick={() => handleRemoveMember(uid)}
+                      >
+                        <Trash2 size={14} style={{ color: '#dc2626' }} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              )}
 
-
-
-
-            </div>
-          ))}
+                {expandedMember === uid && (
+                  <div className="dc-lines-panel">
+                    <p className="dc-muted-xs" style={{ margin: 0 }}>Доступ к линиям связи</p>
+                    {loadingLines ? (
+                      <p className="dc-muted" style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem' }}>Загрузка…</p>
+                    ) : allLines.length === 0 ? (
+                      <p className="dc-muted" style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem' }}>Линии не настроены.</p>
+                    ) : (
+                      <div className="dc-lines-list">
+                        {allLines.map((line) => {
+                          const hasAccess = linePermissions[uid]?.some((perm) => perm.line_id === line.id)
+                          return (
+                            <div key={line.id}>
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  checked={hasAccess}
+                                  onChange={async (e) => {
+                                    try {
+                                      if (e.target.checked) {
+                                        await addLinePermission(tenantId, {
+                                          user_id: uid,
+                                          line_id: line.id,
+                                          action: 'send',
+                                        })
+                                      } else {
+                                        await removeLinePermission(tenantId, uid, line.id)
+                                      }
+                                      const perms = await getUserLinePermissions(tenantId, uid)
+                                      setLinePermissions((prev) => ({ ...prev, [uid]: perms }))
+                                    } catch (err) {
+                                      console.error(err)
+                                    }
+                                  }}
+                                />
+                                <span>{line.name}</span>
+                              </label>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

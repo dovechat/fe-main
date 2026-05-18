@@ -1,30 +1,43 @@
 import { useState, useEffect } from 'react'
-import { 
-  getNotificationSettings, 
+import { Plus, Trash2, Bell } from 'lucide-react'
+import {
+  getNotificationSettings,
   createNotificationSettings,
   updateNotificationSettings,
-  deleteNotificationSettings 
+  deleteNotificationSettings,
 } from '../../api/notifications'
+
+const notificationTypeLabels = {
+  line_expiration: 'Окончание срока линии',
+  line_connection_error: 'Ошибка подключения',
+  line_blocked: 'Блокировка линии',
+  low_balance: 'Низкий баланс',
+  payment_success: 'Успешная оплата',
+}
+
+const channelLabels = {
+  email: 'Email',
+  telegram: 'Telegram',
+  sms: 'SMS',
+  internal: 'Внутренние',
+}
+
+const EMPTY_FORM = {
+  notification_type: 'line_expiration',
+  channel: 'email',
+  target: '',
+  enabled: true,
+}
 
 function NotificationSettings({ currentTenantId, onSettingsLoaded }) {
   const [settings, setSettings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    notification_type: 'line_expiration',
-    channel: 'email',
-    target: '',
-    enabled: true,
-  })
+  const [formData, setFormData] = useState(EMPTY_FORM)
 
   useEffect(() => {
-    if (currentTenantId) {
-      loadSettings()
-    }
+    if (currentTenantId) loadSettings()
   }, [currentTenantId])
 
   const loadSettings = async () => {
@@ -45,18 +58,17 @@ function NotificationSettings({ currentTenantId, onSettingsLoaded }) {
     try {
       await createNotificationSettings(currentTenantId, formData)
       setShowCreateForm(false)
-      resetForm()
+      setFormData(EMPTY_FORM)
       await loadSettings()
     } catch (err) {
       setError(err.response?.data?.detail || err.message)
     }
   }
 
-  const handleUpdate = async (settingsId, updates) => {
+  const handleToggle = async (setting) => {
     try {
-      await updateNotificationSettings(currentTenantId, settingsId, updates)
+      await updateNotificationSettings(currentTenantId, setting.id, { enabled: !setting.enabled })
       await loadSettings()
-      setEditingId(null)
     } catch (err) {
       setError(err.response?.data?.detail || err.message)
     }
@@ -64,7 +76,6 @@ function NotificationSettings({ currentTenantId, onSettingsLoaded }) {
 
   const handleDelete = async (settingsId) => {
     if (!confirm('Удалить эту настройку уведомлений?')) return
-    
     try {
       await deleteNotificationSettings(currentTenantId, settingsId)
       await loadSettings()
@@ -73,156 +84,153 @@ function NotificationSettings({ currentTenantId, onSettingsLoaded }) {
     }
   }
 
-  const resetForm = () => {
-    setFormData({
-      notification_type: 'line_expiration',
-      channel: 'email',
-      target: '',
-      enabled: true,
-    })
-  }
+  const targetPlaceholder = formData.channel === 'email'
+    ? 'user@example.com'
+    : formData.channel === 'telegram'
+      ? '@username или 123456789'
+      : '+79991234567'
 
-  const notificationTypeLabels = {
-    line_expiration: 'Окончание срока линии',
-    line_connection_error: 'Ошибка подключения',
-    line_blocked: 'Блокировка линии',
-    low_balance: 'Низкий баланс',
-    payment_success: 'Успешная оплата',
-  }
+  const targetLabel = formData.channel === 'email'
+    ? 'Email'
+    : formData.channel === 'telegram'
+      ? '@username или chat_id'
+      : 'Телефон'
 
-  const channelLabels = {
-    email: 'Email',
-    telegram: 'Telegram',
-    sms: 'SMS',
-    internal: 'Внутренние',
-  }
-
-  if (loading) return <div className="dashboard">Загрузка настроек уведомлений...</div>
-  if (error) return <div className="dashboard error">{error}</div>
-  if (!currentTenantId) return <div className="dashboard">Выберите компанию</div>
+  if (loading) return <div className="dc-fe-page"><p className="dc-muted">Загрузка настроек уведомлений...</p></div>
+  if (!currentTenantId) return <div className="dc-fe-page"><p className="dc-muted">Выберите компанию</p></div>
 
   return (
-    <div className="dashboard">
-      <h2>Настройки уведомлений</h2>
-      
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <p>Управление каналами уведомлений</p>
-        <button className="btn btn-success" onClick={() => setShowCreateForm(!showCreateForm)}>
-          {showCreateForm ? 'Отмена' : '+ Добавить настройку'}
-        </button>
+    <div>
+      <div className="dc-fe-actions">
+        {/*
+        <div>
+          <h1 className="dc-fe-title">Уведомления</h1>
+          <p className="dc-muted">Управление каналами уведомлений</p>
+        </div>
+        */}
+        <div className="dc-fe-actions">
+          <button
+            className="dc-btn dc-btn-primary"
+            onClick={() => { setShowCreateForm(v => !v); setFormData(EMPTY_FORM) }}
+          >
+            <Plus size={16} />
+            {showCreateForm ? 'Отмена' : 'Добавить'}
+          </button>
+        </div>
       </div>
 
+      {error && <p className="error">{error}</p>}
+
+      {/* Форма создания */}
       {showCreateForm && (
-        <div style={{ 
-          background: 'white', 
-          padding: '20px', 
-          borderRadius: '8px', 
-          border: '1px solid #e1e4e8',
-          marginBottom: '20px'
-        }}>
-          <h3 style={{ marginTop: 0 }}>Новая настройка уведомлений</h3>
-          <form onSubmit={handleCreate}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Тип события</label>
-              <select
-                value={formData.notification_type}
-                onChange={(e) => setFormData({ ...formData, notification_type: e.target.value })}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-                required
-              >
-                {Object.entries(notificationTypeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
+        <div className="dc-card">
+          <div className="dc-card-pad">
+            <h3 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>Новая настройка</h3>
+            <form onSubmit={handleCreate}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Тип события</label>
+                  <select
+                    className="dc-select"
+                    value={formData.notification_type}
+                    onChange={e => setFormData({ ...formData, notification_type: e.target.value })}
+                    required
+                  >
+                    {Object.entries(notificationTypeLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Канал доставки</label>
-              <select
-                value={formData.channel}
-                onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-                required
-              >
-                {Object.entries(channelLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Канал доставки</label>
+                  <select
+                    className="dc-select"
+                    value={formData.channel}
+                    onChange={e => setFormData({ ...formData, channel: e.target.value })}
+                    required
+                  >
+                    {Object.entries(channelLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>
-                Адрес ({formData.channel === 'email' ? 'email' : formData.channel === 'telegram' ? '@username или chat_id' : 'телефон'})
-              </label>
-              <input
-                type="text"
-                value={formData.target}
-                onChange={(e) => setFormData({ ...formData, target: e.target.value })}
-                placeholder={
-                  formData.channel === 'email' ? 'user@example.com' : 
-                  formData.channel === 'telegram' ? '@username или 123456789' : 
-                  '+79991234567'
-                }
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-                required
-              />
-            </div>
+                <div>
+                  <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>{targetLabel}</label>
+                  <input
+                    type="text"
+                    className="dc-input"
+                    value={formData.target}
+                    onChange={e => setFormData({ ...formData, target: e.target.value })}
+                    placeholder={targetPlaceholder}
+                    required
+                  />
+                </div>
+              </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '1rem' }}>
                 <input
                   type="checkbox"
                   checked={formData.enabled}
-                  onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                  style={{ marginRight: '8px' }}
+                  onChange={e => setFormData({ ...formData, enabled: e.target.checked })}
                 />
-                Включено
+                <span className="dc-muted-xs">Включено сразу</span>
               </label>
-            </div>
 
-            <button type="submit" className="btn btn-success">Создать</button>
-          </form>
+              <button type="submit" className="dc-btn dc-btn-primary">Создать</button>
+            </form>
+          </div>
         </div>
       )}
 
+      {/* Список */}
       {settings.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <p style={{ marginBottom: '20px', color: '#666' }}>
-            Настройки уведомлений не найдены
-          </p>
+        <div className="dc-card">
+          <div className="dc-card-pad">
+            <div className="dc-empty">
+              <Bell size={32} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+              <p className="dc-muted">Настройки уведомлений не найдены</p>
+            </div>
+          </div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '12px' }}>
-          {settings.map((setting) => (
-            <div
-              key={setting.id}
-              style={{
-                background: 'white',
-                padding: '16px',
-                borderRadius: '8px',
-                border: '1px solid #e1e4e8',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h4 style={{ margin: '0 0 8px 0' }}>
-                    {notificationTypeLabels[setting.notification_type] || setting.notification_type}
-                  </h4>
-                  <p style={{ margin: '0', color: '#666', fontSize: '13px' }}>
-                    Канал: {channelLabels[setting.channel]} • 
-                    Адрес: {setting.target} • 
-                    Статус: {setting.enabled ? '✅ Включено' : '❌ Выключено'}
-                  </p>
+        <div className="dc-card">
+          <div className="dc-card-pad">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {settings.map(setting => (
+                <div key={setting.id} className="dc-perm-row" style={{ alignItems: 'center' }}>
+                  <div className="dc-perm-main" style={{ flex: 1 }}>
+                    <p className="dc-strong" style={{ margin: '0 0 0.2rem' }}>
+                      {notificationTypeLabels[setting.notification_type] || setting.notification_type}
+                    </p>
+                    <p className="dc-muted-xs" style={{ margin: 0 }}>
+                      {channelLabels[setting.channel]} · {setting.target}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {setting.enabled
+                      ? <span className="dc-badge dc-badge-green">Включено</span>
+                      : <span className="dc-badge dc-badge-neutral">Выключено</span>
+                    }
+                    <button
+                      className="dc-btn dc-btn-outline dc-btn-sm"
+                      onClick={() => handleToggle(setting)}
+                    >
+                      {setting.enabled ? 'Выключить' : 'Включить'}
+                    </button>
+                    <button
+                      className="dc-btn dc-btn-sm"
+                      style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}
+                      onClick={() => handleDelete(setting.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className={setting.enabled ? 'btn btn-secondary' : 'btn btn-success'} onClick={() => handleUpdate(setting.id, { enabled: !setting.enabled })}>
-                    {setting.enabled ? 'Выключить' : 'Включить'}
-                  </button>
-                  <button className="btn btn-danger" onClick={() => handleDelete(setting.id)}>Удалить</button>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>

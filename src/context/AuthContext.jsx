@@ -8,6 +8,15 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null)
   const [tenantId, setTenantId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [currentTenant, setCurrentTenantState] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('current_tenant')) || null } catch { return null }
+  })
+
+  const setCurrentTenant = (tenant) => {
+    setCurrentTenantState(tenant)
+    if (tenant) localStorage.setItem('current_tenant', JSON.stringify(tenant))
+    else localStorage.removeItem('current_tenant')
+  }
 
   const parseTenantId = (t) => {
     try { return JSON.parse(atob(t.split('.')[1])).tenant_id || null } catch { return null }
@@ -39,6 +48,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null)
     setUser(null)
     setTenantId(null)
+    setCurrentTenantState(null)
     localStorage.clear()
     window.location.href = '/login'
   }
@@ -52,7 +62,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      user, token, tenantId, loading, login, logout, updateToken,
+      user, token, tenantId, loading, login, logout, updateToken, currentTenant, setCurrentTenant, 
       isAuthenticated: !!token,
     }}>
       {children}

@@ -4,8 +4,6 @@ import Button from './Button'
 import Input from './Input'
 import apiClient from '../../services/accountClient'
 
-
-
 function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -24,15 +22,13 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [tgQrToken, setTgQrToken] = useState(null)
   const [tgQrLoading, setTgQrLoading] = useState(false)
 
-
-  // Загружаем существующие настройки
   useEffect(() => {
     let isMounted = true
-    
+
     const loadAccountInfo = async () => {
       try {
         setLoading(true)
-        
+
         let response
         try {
           response = await getChannelAccount(tenantId, lineId)
@@ -44,15 +40,15 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
           }
           throw err
         }
-        
+
         if (!isMounted) return
-        
+
         if (response) {
           const phone = response.phone || response.state_json?.phone
           if (phone) setCredentials({ phone })
           else initEmptyCredentials()
         }
-        
+
       } catch (err) {
         console.error('Ошибка загрузки:', err)
         if (isMounted) initEmptyCredentials()
@@ -60,9 +56,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         if (isMounted) setLoading(false)
       }
     }
-    
+
     loadAccountInfo()
-    
+
     return () => { isMounted = false }
   }, [tenantId, lineId, channelType])
 
@@ -90,10 +86,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setCredentials({
-      ...credentials,
-      [name]: value
-    })
+    setCredentials({ ...credentials, [name]: value })
     setError('')
   }
 
@@ -123,7 +116,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         default:
           throw new Error('Тип канала не поддерживается')
       }
-      
+
       alert('Настройки сохранены! Канал подключен.')
       onBack()
     } catch (err) {
@@ -135,196 +128,170 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
     }
   }
 
-
-const handleRequestCode = async () => {
-  if (!credentials.phone) {
-    setError('Введите номер телефона')
-    return
-  }
-
-  try {
-    setAuthLoading(true)
-    const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000';
-
-    const response = await fetch(`${API_URL}/auth/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: credentials.phone })
-    })
-    
-    if (!response.ok) throw new Error('Ошибка запроса кода')
-    
-    setAuthStep('code_requested')
-    setShowCodeInput(true)
-    alert('Код отправлен в Telegram!')
-  } catch (err) {
-    setError('Ошибка при запросе кода: ' + err.message)
-  } finally {
-    setAuthLoading(false)
-  }
-}
-
-const handleVerifyCode = async () => {
-  if (!code.trim()) {
-    setError('Введите код из Telegram')
-    return
-  }
-
-  try {
-    setAuthLoading(true)
-  
-    const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000';
-
-    const checkResponse = await fetch(`${API_URL}/auth/check?phone=${encodeURIComponent(credentials.phone)}&code=${code}`,
-      { method: 'POST', headers: { 'accept': 'application/json' } }
-    )
-
-    if (!checkResponse.ok) throw new Error('Неверный код')
-    
-    const authData = await checkResponse.json()
-    
-    console.log("/auth/check authData", authData);
-
-    if (authData.status !== 'authorized') {
-      throw new Error('Авторизация не удалась')
+  const handleRequestCode = async () => {
+    console.log('TG API URL:', import.meta.env.VITE_TELEGRAM_API_URL)
+    if (!credentials.phone) {
+      setError('Введите номер телефона')
+      return
     }
-
-    const sessionData = {
-      phone: credentials.phone,
-      session_string: authData.session
-    }
-
-    await updateTelegramUser(tenantId, lineId, sessionData)
-    
-    setAuthStep('verified')
-    alert('Аккаунт успешно авторизован!')
-    onBack()
-  } catch (err) {
-    setError('Ошибка проверки кода: ' + err.message)
-  } finally {
-    setAuthLoading(false)
-  }
-}
-
-const handleGetQR = async () => {
-  if (!credentials.idInstance || !credentials.apiTokenInstance) {
-    setError('Введите ID инстанса и API токен')
-    return
-  }
-
-  try {
-    setQrLoading(true)
-    const response = await apiClient.post(
-      `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/qr`,
-      {
-        id_instance: credentials.idInstance,
-        api_token: credentials.apiTokenInstance
-      }
-    )
-    setQrCode(response.data.qr)
-  } catch (err) {
-    setError('Ошибка получения QR: ' + err.message + ' ' + response.data.qr)
-  } finally {
-    setQrLoading(false)
-  }
-}
-
-
-
-const handleRequestTgQR = async () => {
-  try {
-    setTgQrLoading(true)
-    const API_URL =
-      import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
-    const response = await fetch(`${API_URL}/auth/qr/start`, {
-      method: 'POST'
-    })
-    if (!response.ok) throw new Error('Ошибка получения QR')
-    const data = await response.json()
-    setTgQrCode(data.qr)
-    setTgQrToken(data.token)
-    pollTgQrStatus(data.token)
-  } catch (err) {
-    setError('Ошибка получения QR: ' + err.message)
-  } finally {
-    setTgQrLoading(false)
-  }
-}
-
-const pollTgQrStatus = async (token) => {
-  if (!token || token === 'undefined') {
-    setError('Ошибка получения токена QR')
-    return
-  }
-  let attempts = 0
-  const API_URL =
-    import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
-  const interval = setInterval(async () => {
-    attempts++
     try {
-      const response = await fetch(
-        `${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`
-      )
-      const data = await response.json()
-      if (data.status === 'authorized') {
-        clearInterval(interval)
-        const sessionData = {
-          session_string: data.session
-        }
-        await updateTelegramUser(tenantId, lineId, sessionData)
-        alert('Аккаунт успешно авторизован!')
-        onBack()
-        return
-      }
-      if (attempts > 15) {
-        clearInterval(interval)
-        setTgQrCode(null)
-        setTgQrToken(null)
-        handleRequestTgQR()  // восстановил старое имя
-        return
-      }
+      setAuthLoading(true)
+
+      const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${API_URL}/auth/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: credentials.phone })
+      })
+      if (!response.ok) throw new Error('Ошибка запроса кода')
+      setAuthStep('code_requested')
+      setShowCodeInput(true)
+      alert('Код отправлен в Telegram!')
     } catch (err) {
-      clearInterval(interval)
-      setError('Ошибка проверки QR: ' + err.message)
+      setError('Ошибка при запросе кода: ' + err.message)
+    } finally {
+      setAuthLoading(false)
     }
-  }, 3000)
-}
-
-
-const handleConnectInstance = async () => {
-  try {
-    setQrLoading(true)
-    const response = await apiClient.post(
-      `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
-    )
-    setQrCode(response.data.qr.qr)
-    await updateWhatsAppGreen(tenantId, lineId, {})
-    setTimeout(() => pollGreenStatus(), 5000)
-  } catch (err) {
-    setError('Ошибка подключения: ' + err.message)
-  } finally {
-    setQrLoading(false)
   }
-}
 
-const pollGreenStatus = () => {
-  const interval = setInterval(async () => {
-    try {
-      const accounts = await getChannelAccount(tenantId, lineId)
-      const account = Array.isArray(accounts)
-        ? accounts.find(a => a.channel_type === 'whatsapp_green')
-        : accounts
-      if (account?.connection_status === 'connected') {
-        clearInterval(interval)
-        onBack()
-      }
-    } catch {
-      clearInterval(interval)
+  const handleVerifyCode = async () => {
+    if (!code.trim()) {
+      setError('Введите код из Telegram')
+      return
     }
-  }, 2000)
-}
+    try {
+      setAuthLoading(true)
+      const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+      const checkResponse = await fetch(
+        `${API_URL}/auth/check?phone=${encodeURIComponent(credentials.phone)}&code=${code}`,
+        { method: 'POST', headers: { accept: 'application/json' } }
+      )
+      if (!checkResponse.ok) throw new Error('Неверный код')
+      const authData = await checkResponse.json()
+      console.log('/auth/check authData', authData)
+      if (authData.status !== 'authorized') throw new Error('Авторизация не удалась')
+      await updateTelegramUser(tenantId, lineId, {
+        phone: credentials.phone,
+        session_string: authData.session,
+      })
+      setAuthStep('verified')
+      alert('Аккаунт успешно авторизован!')
+      onBack()
+    } catch (err) {
+      setError('Ошибка проверки кода: ' + err.message)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
 
+  const handleGetQR = async () => {
+    if (!credentials.idInstance || !credentials.apiTokenInstance) {
+      setError('Введите ID инстанса и API токен')
+      return
+    }
+    try {
+      setQrLoading(true)
+      const response = await apiClient.post(
+        `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/qr`,
+        { id_instance: credentials.idInstance, api_token: credentials.apiTokenInstance }
+      )
+      setQrCode(response.data.qr)
+    } catch (err) {
+      setError('Ошибка получения QR: ' + err.message)
+    } finally {
+      setQrLoading(false)
+    }
+  }
 
+  const handleRequestTgQR = async () => {
+    try {
+      setTgQrLoading(true)
+      const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${API_URL}/auth/qr/start`, { method: 'POST' })
+      if (!response.ok) throw new Error('Ошибка получения QR')
+      const data = await response.json()
+      setTgQrCode(data.qr)
+      setTgQrToken(data.token)
+      pollTgQrStatus(data.token)
+    } catch (err) {
+      setError('Ошибка получения QR: ' + err.message)
+    } finally {
+      setTgQrLoading(false)
+    }
+  }
+
+  const pollTgQrStatus = async (token) => {
+    if (!token || token === 'undefined') {
+      setError('Ошибка получения токена QR')
+      return
+    }
+    let attempts = 0
+    const API_URL = import.meta.env.VITE_TELEGRAM_API_URL || 'http://localhost:8000'
+    const interval = setInterval(async () => {
+      attempts++
+      if (attempts > 5) {
+        clearInterval(interval)
+        setError('Время ожидания QR истекло')
+        setTgQrCode(null)
+        return
+      }
+      try {
+        const response = await fetch(`${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`)
+        const data = await response.json()
+        if (data.status === 'authorized') {
+          clearInterval(interval)
+          await updateTelegramUser(tenantId, lineId, { session_string: data.session })
+          alert('Аккаунт успешно авторизован!')
+          onBack()
+        }
+      } catch (err) {
+        clearInterval(interval)
+        setError('Ошибка проверки QR: ' + err.message)
+      }
+    }, 3000)
+  }
+
+  const handleConnectInstance = async () => {
+    try {
+      setQrLoading(true)
+      const response = await apiClient.post(
+        `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
+      )
+      setQrCode(response.data.qr.qr)
+      await updateWhatsAppGreen(tenantId, lineId, {})
+      pollGreenStatus()
+    } catch (err) {
+      setError('Ошибка подключения: ' + err.message)
+    } finally {
+      setQrLoading(false)
+    }
+  }
+
+  const pollGreenStatus = () => {
+    const interval = setInterval(async () => {
+      try {
+        const accounts = await getChannelAccount(tenantId, lineId)
+        const account = Array.isArray(accounts)
+          ? accounts.find(a => a.channel_type === 'whatsapp_green')
+          : accounts
+        if (account?.connection_status === 'connected') {
+          clearInterval(interval)
+          onBack()
+        }
+      } catch {
+        clearInterval(interval)
+      }
+    }, 2000)
+  }
+
+  const getChannelName = () => {
+    switch (channelType) {
+      case 'telegram_bot':   return 'Telegram Bot'
+      case 'telegram_user':  return 'Telegram User'
+      case 'vk':             return 'VK'
+      default:               return channelType
+    }
+  }
 
   const renderForm = () => {
     switch (channelType) {
@@ -346,12 +313,12 @@ const pollGreenStatus = () => {
               onChange={handleChange}
               placeholder="https://your-domain.com/webhook"
             />
-            <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
+            <p className="dc-muted-xs" style={{ marginTop: '-10px', marginBottom: '20px' }}>
               Получите токен у <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather</a>
-            </div>
+            </p>
           </>
         )
-      
+
       case 'telegram_user':
         return (
           <>
@@ -360,24 +327,22 @@ const pollGreenStatus = () => {
               name="phone"
               value={credentials.phone || ''}
               onChange={handleChange}
-              //required
               placeholder="+79991234567"
             />
-            <div style={{ fontSize: '13px', color: '#666', marginTop: '-10px', marginBottom: '20px' }}>
-              Номер телефона с кодом страны. На него придет код подтверждения.
-            </div>
-
+            <p className="dc-muted-xs" style={{ marginTop: '-10px', marginBottom: '20px' }}>
+              Номер телефона с кодом страны. На него придёт код подтверждения.
+            </p>
 
             {!showCodeInput ? (
-              <Button 
-                type="button" 
-                variant="secondary"
+              <button
+                type="button"
+                className="dc-btn dc-btn-outline"
                 onClick={handleRequestCode}
-                loading={authLoading}
+                disabled={authLoading}
                 style={{ marginBottom: '16px' }}
               >
-                Получить код из Telegram
-              </Button>
+                {authLoading ? 'Отправка...' : 'Получить код из Telegram'}
+              </button>
             ) : (
               <div style={{ marginTop: '16px' }}>
                 <Input
@@ -388,32 +353,27 @@ const pollGreenStatus = () => {
                   placeholder="Введите 5-значный код"
                   style={{ marginBottom: '12px' }}
                 />
-                <Button 
-                  type="button" 
-                  variant="success"
+                <button
+                  type="button"
+                  className="dc-btn dc-btn-primary"
                   onClick={handleVerifyCode}
-                  loading={authLoading}
+                  disabled={authLoading}
                 >
-                  Подтвердить код
-                </Button>
+                  {authLoading ? 'Проверка...' : 'Подтвердить код'}
+                </button>
               </div>
             )}
 
-
-
-
-
-
             {!tgQrCode ? (
-              <Button
+              <button
                 type="button"
-                variant="secondary"
-                onClick={async () => { await handleRequestTgQR(); }}
-                loading={tgQrLoading}
-                style={{ marginBottom: '16px' }}
+                className="dc-btn dc-btn-outline"
+                onClick={async () => { await handleRequestTgQR() }}
+                disabled={tgQrLoading}
+                style={{ marginBottom: '16px', marginTop: '12px' }}
               >
-                Войти через QR код
-              </Button>
+                {tgQrLoading ? 'Генерация QR...' : 'Войти через QR код'}
+              </button>
             ) : (
               <div style={{ marginTop: '16px', textAlign: 'center' }}>
                 <img
@@ -421,99 +381,92 @@ const pollGreenStatus = () => {
                   alt="Telegram QR"
                   style={{ maxWidth: '300px', marginBottom: '12px' }}
                 />
-                <p style={{ fontSize: '14px', color: '#666' }}>
+                <p className="dc-muted-xs">
                   Откройте Telegram → Настройки → Устройства → Подключить устройство
                 </p>
               </div>
             )}
-
-
-
           </>
         )
-      
-case 'vk':
-  return (
-    <div  style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
-      <div  style={{ width: '200px', flexShrink: 0 }}>
-        <Input
-          label="Access Token"
-          name="access_token"
-          value={credentials.access_token || ''}
-          onChange={handleChange}
-          required
-          placeholder="vk1.a.abcdef..."
-        />
 
-        <Input
-          label="ID группы (опционально)"
-          name="group_id"
-          value={credentials.group_id || ''}
-          onChange={handleChange}
-          placeholder="123456789"
-        />
+      case 'vk':
+        return (
+          <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
+            <div style={{ width: '200px', flexShrink: 0 }}>
+              <Input
+                label="Access Token"
+                name="access_token"
+                value={credentials.access_token || ''}
+                onChange={handleChange}
+                required
+                placeholder="vk1.a.abcdef..."
+              />
+              <Input
+                label="ID группы (опционально)"
+                name="group_id"
+                value={credentials.group_id || ''}
+                onChange={handleChange}
+                placeholder="123456789"
+              />
+              <Input
+                label="Код подтверждения"
+                name="confirmation_code"
+                value={credentials.confirmation_code || ''}
+                onChange={handleChange}
+                placeholder="f6ec725d"
+              />
+              <Input
+                label="Секретный ключ"
+                name="secret_key"
+                value={credentials.secret_key || ''}
+                onChange={handleChange}
+                placeholder="Секретный ключ callback"
+              />
+            </div>
+            <p className="dc-muted-xs" style={{ flex: 1 }}>
+              Получите эти параметры в настройках приложения VK:<br />
+              — главная страница VK → сообщества → ваша группа → управление → дополнительно → работа с API.<br />
+              <strong>Access Token</strong> — во вкладке «Ключи доступа»<br />
+              При создании ключа надо проставить галки:<br />
+              Разрешить приложению доступ к сообщениям сообщества<br />
+              Разрешить приложению доступ к фотографиям сообщества<br />
+              Разрешить приложению доступ к документам сообщества<br />
+              Остальные параметры — во вкладке Callback API:<br />
+              <strong>ID группы</strong> — в сером блоке «type»: «confirmation», «group_id»: 123456789.<br />
+              <strong>Код подтверждения</strong> — сразу под ним «Строка, которую должен вернуть сервер: 987654321»<br />
+              <strong>Секретный ключ</strong> — придумайте сами из латинских букв и цифр и сохраните у себя.<br />
+              <strong style={{ color: '#b91c1c' }}>Внимание!</strong> В форме настроек на сайте VK ничего сохранять (и нажимать кнопки) <strong>не нужно</strong>,<br />
+              все параметры вводятся <strong>только</strong> в нашем интерфейсе, в этой форме.
+            </p>
+          </div>
+        )
 
-        <Input
-          label="Код подтверждения"
-          name="confirmation_code"
-          value={credentials.confirmation_code || ''}
-          onChange={handleChange}
-          placeholder="f6ec725d"
-        />
-
-        <Input
-          label="Секретный ключ"
-          name="secret_key"
-          value={credentials.secret_key || ''}
-          onChange={handleChange}
-          placeholder="Секретный ключ callback"
-        />
-      </div>
-
-      <div style={{ flex: 1, fontSize: '13px', color: '#666' }}>
-        Получите эти параметры в настройках приложения VK: <br />
-        - главная страница VK - сообщества - ваша группа - управление - дополнительно - работа с API.<br />
-        <b>Access Token</b> - во вкладке "Ключи доступа"<br />
-        остальные параметры - во вкладке Callback API:<br />
-        <b>ID группы</b> - в сером блоке с текстом "Для получения ..." "type": "confirmation", "group_id": 123456789.<br />
-        <b> Код подтверждения</b>  - сразу под ним "Строка, которую должен вернуть сервер: 987654321"<br />
-        <b> Секретный ключ</b>  придумайте сами из латинских больших и маленьких букв и цифр и сохраните его у себя.<br />
-        <b style={{color: "red"}}> Внимание!</b>  В форме на настроек на сайте VK ничего сохранять (и нажимать кнопки) <b>не нужно</b>, <br />
-        все параметры вводятся <b>только</b> в нашем интерфейсе, в этой форме.
-      </div>
-    </div>
-  )
-      
       case 'whatsapp_green':
         return (
           <>
             {!qrCode ? (
               <div style={{ marginBottom: '20px' }}>
-                <Button 
-                  type="button" 
-                  variant="secondary"
+                <button
+                  type="button"
+                  className="dc-btn dc-btn-outline"
                   onClick={handleConnectInstance}
-                  loading={qrLoading}
+                  disabled={qrLoading}
                 >
-                  Подключить инстанс
-              </Button>
+                  {qrLoading ? 'Подключение...' : 'Подключить инстанс'}
+                </button>
               </div>
             ) : (
               <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                <img 
+                <img
                   src={`data:image/png;base64,${qrCode}`}
                   alt="WhatsApp QR"
                   style={{ maxWidth: '300px', marginBottom: '12px' }}
                 />
-                <p style={{ fontSize: '14px', color: '#666' }}>
-                  Отсканируйте в WhatsApp → Связанные устройства
-                </p>
+                <p className="dc-muted-xs">Отсканируйте в WhatsApp → Связанные устройства</p>
               </div>
             )}
           </>
-        );
-
-
+        )
 
       case 'waba':
         return (
@@ -526,90 +479,60 @@ case 'vk':
               required
               placeholder="ваш-360dialog-api-key"
             />
-            <div style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+            <p className="dc-muted-xs" style={{ marginTop: '8px' }}>
               API ключ из 360dialog → настройки номера
-            </div>
+            </p>
           </>
-        );
-
+        )
 
       default:
         return (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+          <p className="dc-muted" style={{ textAlign: 'center', padding: '40px' }}>
             Настройка для этого типа канала пока не реализована
-          </div>
+          </p>
         )
-    }
-  }
-
-  const getChannelName = () => {
-    switch (channelType) {
-      case 'telegram_bot': return 'Telegram Bot'
-      case 'telegram_user': return 'Telegram User'
-      case 'vk': return 'VK'
-      default: return channelType
     }
   }
 
   if (loading) {
     return (
-      <div className="container" style={{ maxWidth: '500px', margin: '40px auto' }}>
-        <div>Загрузка настроек канала...</div>
+      <div className="dc-fe-page">
+        <p className="dc-muted">Загрузка настроек канала...</p>
       </div>
     )
   }
 
   return (
-    <div className="container" style={{ maxWidth: channelType === 'vk' ? '1000px' : '500px', margin: '40px auto' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
-          ← Назад к линии
-        </Button>
-        
-        <h2>Настройка канала: {getChannelName()}</h2>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          Введите данные для подключения к {getChannelName()}
-        </p>
+    <div className="dc-fe-page dc-fe-stack" style={{ maxWidth: channelType === 'vk' ? '860px' : '520px' }}>
+      <button type="button" className="dc-btn dc-btn-outline dc-btn-sm" onClick={onBack}>
+        ← Назад к линии
+      </button>
+
+      <div>
+        <h1 className="dc-fe-title">Настройка канала: {getChannelName()}</h1>
+        <p className="dc-muted">Введите данные для подключения к {getChannelName()}</p>
       </div>
 
-      <form onSubmit={handleSubmit} autoComplete="off">
-        {renderForm()}
-        
-        {error && <div className="error">{error}</div>}
+      <div className="dc-card">
+        <div className="dc-card-pad">
+          <form onSubmit={handleSubmit} autoComplete="off">
+            {renderForm()}
 
-      <div style={{ display: 'flex', gap: '12px', height: '40px', width: '100%', alignItems: 'stretch' }}>
-        {channelType !== 'whatsapp_green' && (
-          <Button type="submit" variant="success" loading={saving} 
-            style={{ 
-              flex: 1, 
-              height: '40px', 
-              padding: '0', 
-              boxSizing: 'border-box',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minWidth: 0,
-              margin: 0
-            }}>
-            Сохранить и подключить
-          </Button>
-        )}
-        <Button type="button" variant="secondary" onClick={onBack} 
-          style={{ 
-            flex: 1, 
-            height: '40px', 
-            padding: '0', 
-            boxSizing: 'border-box',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: 0,
-            margin: 0
-          }}>
-          Отмена
-        </Button>
+            {error && <p className="error" style={{ marginTop: '12px' }}>{error}</p>}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              {channelType !== 'whatsapp_green' && (
+                <button type="submit" className="dc-btn dc-btn-primary" disabled={saving} style={{ flex: 1 }}>
+                  {saving ? 'Сохранение...' : 'Сохранить и подключить'}
+                </button>
+              )}
+              <button type="button" className="dc-btn dc-btn-outline" onClick={onBack} style={{ flex: 1 }}>
+                Отмена
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-      </form>
     </div>
   )
 }

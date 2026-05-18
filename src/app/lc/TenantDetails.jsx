@@ -1,112 +1,154 @@
-import Button from './Button'
+import { useState, useEffect } from 'react'
+import { Building2, Users, Pencil, Landmark, ArrowLeft } from 'lucide-react'
 import MembersList from './MembersList'
 
+function paymentLabel(p) {
+  if (p === 'acquiring') return 'Эквайринг'
+  if (p === 'invoice') return 'Счёт'
+  return p || '—'
+}
+
+function statusLabel(s) {
+  if (s === 'active') return 'Активна'
+  if (s === 'inactive') return 'Неактивна'
+  return s || '—'
+}
+
+function dash(v) {
+  if (v == null || String(v).trim() === '') return null
+  return v
+}
+
+const PLACEHOLDER = {
+  address: 'ул. Тестовая, 1',
+  phone: '+7 999 123-45-67',
+  email: 'test@example.com',
+  inn: '0000000000',
+}
+
 function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
+  const bd = tenant.banking_details || {}
+  const [staffCount, setStaffCount] = useState(
+    () => (tenant.employee_count != null ? tenant.employee_count : null),
+  )
+
+  useEffect(() => {
+    setStaffCount(tenant.employee_count != null ? tenant.employee_count : null)
+  }, [tenant.id])
+
   return (
-    <div className="dashboard">
-      <div style={{ marginBottom: '20px' }}>
-        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
-          ← Назад к списку
-        </Button>
-        
-        <h2>{tenant.name}</h2>
-      </div>
-
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Основная информация
-        </h3>
-        
-        <div style={{ display: 'grid', gap: '12px' }}>
-          <div>
-            <strong>Название:</strong> {tenant.name}
-          </div>
-          <div>
-            <strong>ID:</strong> <code style={{ fontSize: '12px', background: '#f5f7fa', padding: '2px 6px', borderRadius: '4px' }}>{tenant.id}</code>
-          </div>
-          <div>
-            <strong>Локаль:</strong> {tenant.locale}
-          </div>
-          <div>
-            <strong>Способ оплаты:</strong> {tenant.payment}
-          </div>
-          <div>
-            <strong>Статус:</strong> {tenant.status}
-          </div>
-        </div>
-
-        <div style={{ marginTop: '16px' }}>
-          <Button variant="primary" onClick={onEdit}>
-            Редактировать
-          </Button>
+    <div className="dc-fe-page dc-fe-stack">
+      <div className="dc-fe-header">
+        <div>
+          <button type="button" className="dc-btn dc-btn-outline dc-btn-sm" onClick={onBack}>
+            <ArrowLeft size={16} aria-hidden />
+            К списку
+          </button>
+          <h1 className="dc-fe-title" style={{ marginTop: '0.75rem' }}>
+            {tenant.name}
+          </h1>
+          <p className="dc-fe-subtitle">
+            Локаль: {tenant.locale} · Оплата: {paymentLabel(tenant.payment)} · Статус: {statusLabel(tenant.status)}
+          </p>
         </div>
       </div>
 
-      {/* Банковские реквизиты */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '16px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Банковские реквизиты (RU)
-        </h3>
+      <div className="dc-card dc-card-pad">
+        <div className="dc-company-row">
+          <div style={{ display: 'flex', gap: '1rem', minWidth: 0, flex: 1 }}>
+            <div className="dc-icon-tile">
+              <Building2 size={22} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 className="dc-company-title" style={{ marginBottom: '0.75rem' }}>
+                Карточка компании
+              </h2>
+              <div className="dc-field-grid">
+                <div>
+                  <p className="dc-muted-xs">Адрес</p>
+                  <p className="dc-strong">{dash(tenant.address) ?? PLACEHOLDER.address}</p>
+                </div>
+                <div>
+                  <p className="dc-muted-xs">Телефон</p>
+                  <p className="dc-strong">{dash(tenant.phone) ?? PLACEHOLDER.phone}</p>
+                </div>
+                <div>
+                  <p className="dc-muted-xs">Email</p>
+                  <p className="dc-strong">{dash(tenant.email) ?? PLACEHOLDER.email}</p>
+                </div>
+                <div>
+                  <p className="dc-muted-xs">ИНН</p>
+                  <p className="dc-strong">{dash(tenant.inn) ?? PLACEHOLDER.inn}</p>
+                </div>
+                <div>
+                  <p className="dc-muted-xs">Сотрудники</p>
+                  <p className="dc-strong" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <Users size={14} style={{ color: '#3b82f6' }} aria-hidden />
+                    {staffCount != null ? staffCount : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="dc-muted-xs">ID</p>
+                  <p className="dc-strong" style={{ fontFamily: 'ui-monospace, monospace', fontSize: '0.8125rem' }}>
+                    {tenant.id}
+                  </p>
+                </div>
+              </div>
 
-        {tenant.banking_details ? (
-          <>
-            <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
-              <div>
-                <strong>Банк:</strong> {tenant.banking_details.bank_name}
+              <div className="dc-req-block">
+                <p className="dc-muted-xs" style={{ marginBottom: '0.5rem' }}>Реквизиты</p>
+                <div className="dc-req-grid">
+                  <div>
+                    <span className="dc-muted-xs">Банк: </span>
+                    <span className="dc-strong">{bd.bank_name || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="dc-muted-xs">Р/С: </span>
+                    <span className="dc-strong">{bd.account_number || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="dc-muted-xs">БИК: </span>
+                    <span className="dc-strong">{bd.bic || '—'}</span>
+                  </div>
+                </div>
+                {(bd.corr_account || bd.kpp || bd.currency) && (
+                  <div className="dc-req-grid" style={{ marginTop: '0.5rem' }}>
+                    <div>
+                      <span className="dc-muted-xs">К/С: </span>
+                      <span className="dc-strong">{bd.corr_account || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="dc-muted-xs">КПП: </span>
+                      <span className="dc-strong">{bd.kpp || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="dc-muted-xs">Валюта: </span>
+                      <span className="dc-strong">{bd.currency || '—'}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                <strong>Номер счёта:</strong> {tenant.banking_details.account_number}
-              </div>
-              <div>
-                <strong>БИК:</strong> {tenant.banking_details.bic}
-              </div>
-              <div>
-                <strong>Корр. счёт:</strong> {tenant.banking_details.corr_account}
-              </div>
-              <div>
-                <strong>КПП:</strong> {tenant.banking_details.kpp}
-              </div>
-              <div>
-                <strong>Валюта:</strong> {tenant.banking_details.currency}
-              </div>
-              <div>
-                <strong>Основной счёт:</strong> {tenant.banking_details.is_primary ? 'Да' : 'Нет'}
+
+              <div className="dc-detail-toolbar">
+                <button type="button" className="dc-btn dc-btn-primary" onClick={onEdit}>
+                  <Pencil size={16} aria-hidden />
+                  Редактировать
+                </button>
+                <button type="button" className="dc-btn dc-btn-outline" onClick={onEditBanking}>
+                  <Landmark size={16} aria-hidden />
+                  {bd.bank_name || bd.account_number ? 'Изменить реквизиты' : 'Добавить реквизиты'}
+                </button>
               </div>
             </div>
-            <Button variant="primary" onClick={onEditBanking}>
-              Редактировать реквизиты
-            </Button>
-          </>
-        ) : (
-          <div>
-            <p style={{ color: '#666', marginBottom: '16px' }}>Реквизиты не заполнены</p>
-            <Button variant="success" onClick={onEditBanking}>
-              Добавить реквизиты
-            </Button>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Сотрудники */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <MembersList tenantId={tenant.id} />
+      <div className="dc-card dc-card-pad">
+        <h3 className="dc-company-title" style={{ marginBottom: '0.75rem' }}>
+          Сотрудники
+        </h3>
+        <MembersList tenantId={tenant.id} onCountChange={setStaffCount} />
       </div>
     </div>
   )

@@ -1,23 +1,111 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLine, updateLine, deleteLine, getChannelAccount, addChannel, renewChannel, toggleChannelConnection } from '../../api/lines'
-import Button from './Button'
-import Input from './Input'
-import ChannelAccount from './ChannelAccount'
-import CreateLine from './CreateLine'
-import apiClient from '../../services/accountClient';
+import {
+  ArrowLeft,
+  MessageSquare,
+  Smartphone,
+  Package,
+  CheckCircle,
+  Trash2,
+  Power,
+  Plus,
+  Settings,
+} from 'lucide-react'
+import { getLine, updateLine, deleteLine, getChannelAccount, toggleChannelConnection } from '../../api/lines'
+import apiClient from '../../services/accountClient'
+import { useAuth } from '../../context/AuthContext'
 
+/* ─── helpers ─────────────────────────────────────────────── */
+
+function channelLabel(type) {
+  switch (type) {
+    case 'telegram_bot':   return 'Telegram Bot'
+    case 'telegram_user':  return 'Telegram'
+    case 'whatsapp_green': return 'WhatsApp'
+    case 'waba':           return 'WhatsApp Business'
+    case 'vk':             return 'VK'
+    default:               return type || 'Канал'
+  }
+}
+
+function uiKind(type) {
+  if (type === 'whatsapp_green') return 'whatsapp'
+  if (type === 'telegram_bot' || type === 'telegram_user') return 'telegram'
+  if (type === 'waba') return 'waba'
+  return 'other'
+}
+
+function formatDate(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+  })
+}
+
+function formatDateFull(iso) {
+  if (!iso) return 'Не установлена'
+  return new Date(iso).toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+/* ─── platform icon ───────────────────────────────────────── */
+
+function PlatformIcon({ kind }) {
+  const style = { width: '2.5rem', height: '2.5rem' }
+  if (kind === 'whatsapp') {
+    return (
+      <div className="dc-platform-icon-wa" style={style}>
+        <MessageSquare size={20} />
+      </div>
+    )
+  }
+  if (kind === 'telegram') {
+    return (
+      <div className="dc-platform-icon-tg" style={style}>
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.45 3.62-.52.36-.99.53-1.42.52-.47-.01-1.37-.27-2.03-.49-.82-.27-1.47-.42-1.42-.88.03-.24.37-.49 1.03-.74 4.02-1.75 6.7-2.91 8.05-3.47 3.84-1.61 4.64-1.89 5.16-1.9.11 0 .37.03.54.17.14.12.18.27.2.38.01.09.03.32.01.5z" />
+        </svg>
+      </div>
+    )
+  }
+  if (kind === 'waba') {
+    return (
+      <div className="dc-platform-icon-waba" style={style}>
+        <Smartphone size={20} />
+      </div>
+    )
+  }
+  return (
+    <div className="dc-platform-icon-default" style={style}>
+      <Package size={20} />
+    </div>
+  )
+}
+
+/* ─── status badge ────────────────────────────────────────── */
+
+function StatusBadge({ status }) {
+  if (status === 'active')   return <span className="dc-badge dc-badge-green">Активна</span>
+  if (status === 'disabled') return <span className="dc-badge dc-badge-neutral">Отключена</span>
+  if (status === 'expired')  return <span className="dc-badge dc-badge-red">Истекла</span>
+  return <span className="dc-badge dc-badge-neutral">{status}</span>
+}
+
+/* ─── main ────────────────────────────────────────────────── */
 
 function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   const [line, setLine] = useState(null)
-  const navigate = useNavigate()
+  const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [updating, setUpdating] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [accounts, setAccounts] = useState([])
+  const { currentTenant } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadLine()
@@ -31,49 +119,17 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
         const arr = Array.isArray(data) ? data : [data]
         setAccounts(arr.sort((a, b) => a.channel_type.localeCompare(b.channel_type)))
       } catch (err) {
-        if (err.response?.status !== 404) {
-          console.error('Ошибка загрузки аккаунтов:', err)
-        }
+        if (err.response?.status !== 404) console.error('Ошибка загрузки аккаунтов:', err)
         setAccounts([])
       }
     }
     loadAccounts()
   }, [tenantId, line?.id])
 
-
-  const handleCleanup = async () => {
-    if (!confirm('Очистить линию? Все каналы будут удалены.')) return;
-    try {
-      await apiClient.post(`/tenants/${tenantId}/lines/${line.id}/account/cleanup`);
-      alert('Линия очищена');
-      onBack();
-    } catch {
-      alert('Ошибка очистки');
-    }
-  };
-
-  const PROVIDERS = [
-    { type: 'telegram_user', label: 'Telegram User', icon: '👤' },
-    { type: 'telegram_bot', label: 'Telegram Bot', icon: '🤖' },
-    { type: 'whatsapp_green', label: 'WhatsApp Green', icon: '📱' },
-    { type: 'waba', label: 'WABA', icon: '💼' },
-    { type: 'vk', label: 'VK', icon: '👥' },
-  ]
-
-  const getConnectionStatusStyle = (status) => {
-    switch (status) {
-      case 'connected': return { background: '#d4edda', color: '#155724' }
-      case 'error': return { background: '#f8d7da', color: '#721c24' }
-      default: return { background: '#e2e3e5', color: '#383d41' }
-    }
-  }
-
-
   const loadLine = async () => {
     try {
       setLoading(true)
       const data = await getLine(tenantId, lineId)
-      console.log('>>> line.connection_state из API:', data.connection_state, typeof data.connection_state)
       setLine(data)
       setEditName(data.name)
     } catch (err) {
@@ -83,9 +139,9 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     }
   }
 
-  const handleUpdateName = async () => {
+  const handleUpdateName = async (e) => {
+    e.preventDefault()
     if (!editName.trim()) return
-    
     try {
       setUpdating(true)
       await updateLine(tenantId, lineId, { name: editName })
@@ -101,7 +157,6 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
 
   const handleDelete = async () => {
     if (!confirm('Вы уверены, что хотите удалить эту линию?')) return
-    
     try {
       setDeleting(true)
       await deleteLine(tenantId, lineId)
@@ -114,46 +169,16 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     }
   }
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Не установлена'
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case 'active': return { background: '#d4edda', color: '#155724' }
-      case 'disabled': return { background: '#e2e3e5', color: '#383d41' }
-      case 'expired': return { background: '#f8d7da', color: '#721c24' }
-      default: return { background: '#e2e3e5', color: '#383d41' }
+  const handleCleanup = async () => {
+    if (!confirm('Очистить линию? Все каналы будут удалены.')) return
+    try {
+      await apiClient.post(`/tenants/${tenantId}/lines/${line.id}/account/cleanup`)
+      alert('Линия очищена')
+      onBack()
+    } catch {
+      alert('Ошибка очистки')
     }
   }
-
-  const getChannelTypeLabel = (type) => {
-    switch (type) {
-      case 'telegram_bot': return 'Telegram Bot'
-      case 'telegram_user': return 'Telegram User'
-      case 'whatsapp_green': return 'WhatsApp Green'
-      case 'whatsapp_business': return 'WhatsApp Business'
-      default: return type
-    }
-  }
-
-  const getChannelIcon = (type) => {
-    switch (type) {
-      case 'telegram_bot': return '🤖'
-      case 'telegram_user': return '👤'
-      case 'whatsapp_green': return '📱'
-      case 'whatsapp_business': return '💼'
-      default: return '📞'
-    }
-  }
-
 
   const toggleLineStatus = async () => {
     const newStatus = line.status === 'active' ? 'disabled' : 'active'
@@ -169,282 +194,269 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     }
   }
 
-
-
-
-const handleConnectionToggle = async () => {
-  let isConnected = false
-  
-  // DEBUG: что реально лежит в connection_state
-  console.log('>>> typeof line.connection_state:', typeof line.connection_state)
-  console.log('>>> line.connection_state:', line.connection_state)
-  
-  if (line.connection_state) {
-    if (typeof line.connection_state === 'object' && line.connection_state.status === 'connected') {
-      isConnected = true
+  const handleToggleConnection = async (channelType) => {
+    try {
+      const updated = await toggleChannelConnection(tenantId, lineId, channelType)
+      setAccounts(accounts.map(a => a.channel_type === channelType ? updated : a))
+    } catch (err) {
+      console.error(err)
     }
   }
-  
-  const newStatus = isConnected ? 'disconnected' : 'connected'
-  const payload = { connection_state: { status: newStatus } }
-  
-  console.log('>>> Отправляем:', payload)
-  
-  try {
-    setUpdating(true)
-    await updateLine(tenantId, lineId, payload)
-    setLine({ ...line, connection_state: { status: newStatus } })
-    alert('Состояние обновлено!')
-  } catch (err) {
-    console.error('>>> Ошибка:', err.response?.data)
-  } finally {
-    setUpdating(false)
+
+  const buildChannelRows = () => {
+    if (!line) return []
+    if (accounts.length) {
+      return accounts.map((acc) => {
+        const ct = acc.channel_type || line.channel_type
+        return {
+          type: ct,
+          kind: uiKind(ct),
+          label: channelLabel(ct),
+          identifier: acc.phone || line.connection_state?.phone || acc.external_id || '—',
+          connected: acc.connection_status === 'connected',
+          expires_at: acc.expires_at,
+        }
+      })
+    }
+    const ct = line.channel_type
+    return [{
+      type: ct,
+      kind: uiKind(ct),
+      label: channelLabel(ct),
+      identifier: line.connection_state?.phone || line.name || '—',
+      connected: line.connection_status === 'connected',
+      expires_at: null,
+    }]
   }
-}
 
+  /* ── loading / error ── */
+  if (loading) return <div className="dc-fe-page"><p className="dc-muted">Загрузка данных линии...</p></div>
+  if (error)   return <div className="dc-fe-page"><p className="error">{error}</p></div>
+  if (!line)   return <div className="dc-fe-page"><p className="dc-muted">Линия не найдена</p></div>
 
-const handleToggleConnection = async (channelType) => {
-  try {
-    const updated = await toggleChannelConnection(tenantId, lineId, channelType)
-    setAccounts(accounts.map(a => a.channel_type === channelType ? updated : a))
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-
-  if (loading) return <div className="dashboard">Загрузка данных линии...</div>
-  if (error) return <div className="dashboard error">{error}</div>
-  if (!line) return <div className="dashboard">Линия не найдена</div>
-
+  const channelRows = buildChannelRows()
+  const uniqueKinds = [...new Set(channelRows.map(c => c.kind))].filter(k => k !== 'other')
 
   return (
-    <div className="dashboard">
-      <div style={{ marginBottom: '20px' }}>
-        <Button variant="secondary" onClick={onBack} style={{ marginBottom: '16px' }}>
-          ← Назад к списку
-        </Button>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px' }}>{getChannelIcon(line.channel_type)}</span>
+    <div className="dc-fe-page dc-fe-stack">
+
+      {/* ── breadcrumb ── */}
+      <div className="dc-line-settings-breadcrumb">
+        <button type="button" onClick={onBack}>
+          <ArrowLeft size={16} />
+          Линии
+        </button>
+        <span>/</span>
+        <span style={{ color: '#0f172a' }}>Настройки линии</span>
+      </div>
+
+      <h1 className="dc-fe-title">Настройки линии</h1>
+
+      {/* ── hero ── */}
+      <div className="dc-line-settings-hero">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+
+          {/* название + иконки платформ + статус */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <div>
               {editing ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Input
-                    type="text"
+                <form onSubmit={handleUpdateName} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    autoFocus
+                    className="dc-input"
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    style={{ width: '300px', margin: 0 }}
+                    onChange={e => setEditName(e.target.value)}
+                    style={{ fontSize: '1rem', padding: '4px 8px', maxWidth: '220px' }}
                   />
-                  <Button variant="primary" onClick={handleUpdateName} loading={updating} size="small">
-                    Сохранить
-                  </Button>
-                  <Button variant="secondary" onClick={() => setEditing(false)} size="small">
-                    Отмена
-                  </Button>
-                </div>
+                  <button type="submit" className="dc-btn dc-btn-primary dc-btn-sm" disabled={updating}>OK</button>
+                  <button type="button" className="dc-btn dc-btn-outline dc-btn-sm" onClick={() => setEditing(false)}>✕</button>
+                </form>
               ) : (
-                <h2>{line.name}</h2>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#0f172a' }}>{line.name}</h2>
               )}
+              <p className="dc-muted-xs" style={{ margin: '0.25rem 0 0' }}>
+                ID: #{String(line.id).slice(0, 8)}
+              </p>
             </div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <span style={{
-                padding: '4px 12px',
-                borderRadius: '16px',
-                fontSize: '12px',
-                fontWeight: '600',
-                ...getStatusBadgeStyle(line.status)
-              }}>
-                {line.status === 'active' ? 'Активна' :
-                 line.status === 'disabled' ? 'Отключена' :
-                 line.status === 'expired' ? 'Истекла' : line.status}
-              </span>
-              {line.is_demo && (
-                <span style={{
-                  padding: '4px 12px',
-                  borderRadius: '16px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  background: '#d0ebff',
-                  color: '#0c63e4'
-                }}>
-                  Демо
-                </span>
-              )}
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              {uniqueKinds.map(k => <PlatformIcon key={k} kind={k} />)}
+            </div>
+            <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+              <StatusBadge status={line.status} />
+              {line.is_demo && <span className="dc-badge dc-badge-amber">Демо</span>}
             </div>
           </div>
-          
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button variant="primary" onClick={() => setEditing(true)}>
-              Переименовать
-            </Button>
-            <Button variant="danger" onClick={handleDelete} loading={deleting}>
-              Удалить
-            </Button>
+
+          {/* оплачено до + кнопки */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+            <div>
+              <p className="dc-muted-xs" style={{ margin: 0 }}>Оплачено до</p>
+              <p style={{ margin: '0.15rem 0 0', fontSize: '1.125rem', fontWeight: 600 }}>
+                {line.expires_at ? formatDate(line.expires_at) : '—'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button type="button" className="dc-btn dc-btn-outline dc-btn-sm" onClick={() => setEditing(true)}>
+                Переименовать
+              </button>
+              <button
+                type="button"
+                className="dc-btn dc-btn-sm"
+                style={{ background: 'linear-gradient(90deg, #f472b6, #c084fc)', color: '#fff', border: 'none', boxShadow: '0 8px 20px rgba(192,132,252,0.35)' }}
+                onClick={() => navigate(`/lc/lines/${lineId}/renew`)}
+              >
+                Продлить
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Основная информация */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Основная информация
-        </h3>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
-          <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>ID линии</div>
-            <div style={{ fontSize: '13px', fontFamily: 'monospace', background: '#f5f7fa', padding: '4px 8px', borderRadius: '4px' }}>
-              {line.id}
+      {/* ── основная информация ── */}
+      <div className="dc-card">
+        <div className="dc-card-pad">
+          <h3 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>Основная информация</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+            <div>
+              <p className="dc-muted-xs" style={{ margin: '0 0 0.25rem' }}>ID линии</p>
+              <code style={{ fontSize: '0.8125rem', background: '#f5f7fa', padding: '4px 8px', borderRadius: '4px', display: 'block' }}>
+                {line.id}
+              </code>
             </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Номер телефона</div>
-            <div style={{ fontSize: '15px', fontWeight: '500' }}>
-              {line.connection_state?.phone || 'Не указан'}
+            <div>
+              <p className="dc-muted-xs" style={{ margin: '0 0 0.25rem' }}>Номер телефона</p>
+              <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 500 }}>
+                {line.connection_state?.phone || 'Не указан'}
+              </p>
             </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Дата создания</div>
-            <div style={{ fontSize: '15px' }}>{formatDate(line.created_at)}</div>
+            <div>
+              <p className="dc-muted-xs" style={{ margin: '0 0 0.25rem' }}>Дата создания</p>
+              <p style={{ margin: 0, fontSize: '0.9375rem' }}>{formatDateFull(line.created_at)}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Состояние подключения */}
-      <div style={{
-        background: 'white',
-        padding: '24px',
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Каналы
-        </h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          {accounts.map(account => (
-            <div key={account.id} style={{
-              border: '1px solid #e1e4e8',
-              borderRadius: '12px',
-              padding: '16px',
-              minWidth: '200px',
-              flex: '1'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '20px' }}>
-                  {PROVIDERS.find(p => p.type === account.channel_type)?.icon}
-                </span>
-                <span style={{ fontWeight: '600' }}>
-                  {PROVIDERS.find(p => p.type === account.channel_type)?.label}
-                </span>
-              </div>
-              <div style={{
-                display: 'inline-block',
-                padding: '4px 10px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                marginBottom: '12px',
-                ...getConnectionStatusStyle(account.connection_status)
-              }}>
-                {account.connection_status === 'connected' ? 'Подключён' :
-                 account.connection_status === 'error' ? 'Ошибка' : 'Отключён'}
-              </div>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                      {(() => {
-                        if (!account.expires_at) return 'Срок не указан'
-                        const date = new Date(account.expires_at)
-                        const isPast = date < new Date()
-                        return (
-                          <span style={{ color: isPast ? '#721c24' : 'inherit' }}>
-                            {isPast ? 'Истёк: ' : 'Оплачен до: '}
-                            {date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                          </span>
-                        )
-                      })()}
+      {/* ── каналы ── */}
+      <div className="dc-card">
+        <div className="dc-card-pad">
+          <h3 style={{ margin: '0 0 0.35rem', fontSize: '1.05rem', fontWeight: 600 }}>Каналы</h3>
+          <p className="dc-muted-xs" style={{ margin: '0 0 1rem' }}>Подключённые мессенджеры и статус</p>
+
+          <div className="dc-platform-list">
+            {channelRows.map((ch, idx) => {
+              const isPast = ch.expires_at && new Date(ch.expires_at) < new Date()
+              return (
+                <div key={`${ch.type}-${idx}`} className="dc-platform-row">
+                  <div className="dc-platform-left">
+                    <PlatformIcon kind={ch.kind} />
+                    <div className="dc-platform-meta">
+                      <p className="dc-platform-label">{ch.label}</p>
+                      <p className="dc-platform-id">{ch.identifier !== '—' ? ch.identifier : <span className="dc-muted-xs">телефон или ID</span>}</p>
+                      {ch.expires_at && (
+                        <p className="dc-muted-xs" style={{ margin: '0.1rem 0 0', color: isPast ? '#b91c1c' : '#6b7280' }}>
+                          {isPast ? 'Истёк: ' : 'Оплачен до: '}{formatDate(ch.expires_at)}
+                        </p>
+                      )}
                     </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <Button variant="primary" size="small"
-                  onClick={() => handleToggleConnection(account.channel_type)}>
-                  {account.connection_status === 'connected' ? 'Отключить' : 'Переподключить'}
-                </Button>
-                <Button variant="secondary" size="small"
-                  onClick={() => navigate(`/lc/lines/${lineId}/channel/${account.channel_type}`)}>
-                  Настроить канал
-                </Button>
-              </div>
-            </div>
-          ))}
-
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    {ch.connected ? (
+                      <span className="dc-badge dc-badge-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <CheckCircle size={12} />
+                        Подключён
+                      </span>
+                    ) : (
+                      <span className="dc-badge dc-badge-neutral">Не подключён</span>
+                    )}
+                    <button type="button" className="dc-btn dc-btn-outline dc-btn-sm" onClick={() => handleToggleConnection(ch.type)}>
+                      <Power size={14} />
+                      {ch.connected ? 'Отключить' : 'Переподключить'}
+                    </button>
+                    <button
+                      type="button"
+                      className="dc-btn dc-btn-outline dc-btn-sm"
+                      onClick={() => navigate(`/lc/lines/${lineId}/channel/${ch.type}`)}
+                    >
+                      <Settings size={14} />
+                      Настроить
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
 
           {accounts.length < 5 && (
-              <div
+            <button
+              type="button"
+              className="dc-btn dc-btn-outline"
+              style={{ marginTop: '0.75rem' }}
               onClick={() => navigate(`/lc/lines/${lineId}/add-channel`)}
-              style={{
-                border: '2px dashed #4A90E2',
-                borderRadius: '12px',
-                padding: '12px 20px',
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                color: '#4A90E2',
-                transition: 'background 0.2s',
-                alignSelf: 'flex-start',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = '#f0f7ff'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <span style={{ fontSize: '22px', lineHeight: 1 }}>+</span>
-              <span style={{ fontSize: '12px' }}>Добавить канал</span>
-            </div>
+              <Plus size={16} />
+              Добавить канал
+            </button>
           )}
-
-
-
         </div>
       </div>
 
-      {/* Действия с линией */}
-      <div style={{ 
-        background: 'white', 
-        padding: '24px', 
-        borderRadius: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ fontSize: '16px', marginBottom: '20px', borderBottom: '1px solid #e1e4e8', paddingBottom: '8px' }}>
-          Действия с линией
-        </h3>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-          {[
-            <Button variant="primary" onClick={() => navigate(`/lc/lines/${lineId}/renew`)}>Продлить подписку</Button>,
-            <Button variant={line.status === 'active' ? 'secondary' : 'success'} onClick={toggleLineStatus} loading={updating}>
+      {/* ── действия с линией ── */}
+      <div className="dc-card">
+        <div className="dc-card-pad">
+          <h3 style={{ margin: '0 0 1rem', fontSize: '1.05rem', fontWeight: 600 }}>Действия с линией</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <button type="button" className="dc-btn dc-btn-outline" onClick={toggleLineStatus} disabled={updating}>
+              <Power size={16} />
               {line.status === 'active' ? 'Отключить' : 'Включить'}
-            </Button>,
-            <Button variant="secondary">Экспорт диалогов</Button>,
-            <Button variant="danger" onClick={handleCleanup}>Очистить линию</Button>,
-          ].map((btn, i) => (
-            <div key={i} style={{ display: 'inline-block' }}>{btn}</div>
-          ))}
+            </button>
+            {/*
+            <button type="button" className="dc-btn dc-btn-outline">
+              Экспорт диалогов
+            </button>
+            */}
+            <button type="button" className="dc-btn dc-btn-outline" onClick={handleCleanup}>
+              Очистить линию
+            </button>
+            <button
+              type="button"
+              className="dc-btn"
+              style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 size={16} />
+              Удалить линию
+            </button>
+          </div>
         </div>
-
-
       </div>
+
+
+
+
+      <div className="dc-card">
+        <div className="dc-card-pad">
+          <h3 style={{ margin: '0 0 0.35rem', fontSize: '1.05rem', fontWeight: 600 }}>Привязка к компании</h3>
+          <p className="dc-muted-xs" style={{ margin: '0 0 0.75rem' }}>
+            Линия работает в контексте текущей активной компании в консоли.
+          </p>
+          <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>
+            Компания
+          </label>
+          <input
+            type="text"
+            readOnly
+            className="dc-select"
+            style={{ maxWidth: '28rem', cursor: 'default', color: '#0f172a' }}
+            value={currentTenant?.name || '—'}
+          />
+        </div>
+      </div>
+
+
+
+
     </div>
   )
 }

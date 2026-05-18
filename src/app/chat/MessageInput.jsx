@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { sf, colors, styles } from '../../styles/apple';
+import { Paperclip, Smile, Send } from 'lucide-react';
 
 export default function MessageInput({ onSend, disabled }) {
   const [input, setInput] = useState('');
@@ -21,36 +21,51 @@ export default function MessageInput({ onSend, disabled }) {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: colors.background, borderRadius: '20px', fontFamily: sf }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Сообщение"
-          disabled={disabled}
-          style={{ ...styles.input, background: 'transparent', border: 'none', padding: '0', flex: 1 }}
-        />
-        
-        <button type="button" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '20px', cursor: 'pointer', color: colors.primary  }}>
-          📎
+    <div style={{ width: '100%' }}>
+      <div className="dc-conv-input-row">
+        <button type="button" className="dc-conv-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label="Вложение">
+          <Paperclip size={20} />
         </button>
-        
+
+        <div style={{ flex: 1, position: 'relative' }}>
+          <input
+            type="text"
+            className="dc-conv-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) handleSubmit(e); }}
+            placeholder="Написать сообщение…"
+            disabled={disabled}
+          />
+          {/*
+          <button
+            type="button"
+            className="dc-conv-icon-btn"
+            style={{ position: 'absolute', right: '0.15rem', top: '50%', transform: 'translateY(-50%)' }}
+            aria-label="Эмодзи"
+          >
+            <Smile size={18} />
+          </button>
+          */}
+        </div>
+
         <button
-          type="submit"
+          type="button"
+          className="dc-conv-send"
           disabled={(!input.trim() && files.length === 0) || disabled}
-          style={(input.trim() || files.length > 0) && !disabled ? styles.buttonPrimary : styles.buttonDisabled}
+          onClick={handleSubmit}
+          aria-label="Отправить"
         >
-          ↑
+          <Send size={18} />
         </button>
-      </form>
-      
+      </div>
+
       {files.length > 0 && (
-        <div style={{ padding: '8px 14px', fontSize: '13px', color: colors.secondaryText }}>
+        <div style={{ padding: '8px 14px', fontSize: '13px', color: '#6b7280' }}>
           {files.map((f, i) => <div key={i}>📎 {f.name}</div>)}
         </div>
       )}
-      
+
       <input type="file" multiple ref={fileInputRef} onChange={handleFileSelect} style={{ display: 'none' }} />
     </div>
   );
