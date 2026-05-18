@@ -204,8 +204,18 @@ function BillingDashboard({ tenantId }) {
                   <tr key={payment.id}>
                     <td style={{ paddingRight: '1rem' }}>{formatDate(payment.created_at)}</td>
                     <td style={{ paddingRight: '1rem' }}>{parseFloat(payment.amount).toFixed(2)} ₽</td>
-                    <td style={{ paddingRight: '1rem' }}><span className={paymentBadgeClass(payment.status)}>{paymentLabel(payment.status)}</span></td>
-                    <td style={{ paddingRight: '1rem' }} className="dc-muted">{payment.payment_method || '—'}</td>
+                    <td style={{ paddingRight: '1rem' }}>
+                      {payment.record_type === 'adjustment'
+                        ? ''
+                        : <span className={paymentBadgeClass(payment.status)}>{paymentLabel(payment.status)}</span>
+                      }
+                    </td>
+                    <td style={{ paddingRight: '1rem' }} className="dc-muted">
+                      {payment.record_type === 'adjustment'
+                        ? 'Внесено админом'
+                        : (payment.payment_method || '—')
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
