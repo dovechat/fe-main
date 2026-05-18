@@ -70,7 +70,7 @@ export default function ConversationList({ conversations, activeConversationId, 
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                     <span style={{ fontSize: '0.8125rem', color: '#4b5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.last_message?.text || `${conv.crm_type} • ${conv.crm_chat_id}`}
+                      {conv.last_message?.text || ''}
                     </span>
                     {conv.unread_count > 0 && (
                       <span style={{ minWidth: '1.25rem', height: '1.25rem', borderRadius: '9999px', background: 'linear-gradient(90deg, #3b82f6, #9333ea)', color: '#fff', fontSize: '0.6875rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.35rem', flexShrink: 0 }}>
@@ -79,7 +79,7 @@ export default function ConversationList({ conversations, activeConversationId, 
                     )}
                   </div>
                   <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', color: '#94a3b8' }}>
-                    {conv.line_name}
+                    {conv.line_name} • {conv.crm_type} 
                   </div>
                 </div>
               </div>
