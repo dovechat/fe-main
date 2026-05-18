@@ -55,7 +55,7 @@ export default function Sidebar() {
           <div className="app-user-meta">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <p className="app-user-name">Аккаунт</p>
-              <NavLink to="/lc/profile" className="app-user-bell" title="Уведомления">
+              <NavLink to="/lc/profile?tab=notifications" className="app-user-bell" title="Уведомления">
                 <Bell size={18} />
               </NavLink>
             </div>
