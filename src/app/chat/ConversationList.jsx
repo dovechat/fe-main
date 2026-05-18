@@ -70,7 +70,7 @@ export default function ConversationList({ conversations, activeConversationId, 
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                     <span style={{ fontSize: '0.8125rem', color: '#4b5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {conv.last_message?.text || (conv.last_message?.media?.length > 0 ? 📎 conv.last_message.media[0].mime_type : '')}
+                      {conv.last_message?.text || (conv.last_message?.media?.length > 0 ? (conv.last_message.media[0].mime_type?.startsWith('image/') ? 'Фото' : conv.last_message.media[0].mime_type?.startsWith('video/') ? 'Видео' : 'Файл') : '')}
                     </span>
                     {conv.unread_count > 0 && (
                       <span style={{ minWidth: '1.25rem', height: '1.25rem', borderRadius: '9999px', background: 'linear-gradient(90deg, #3b82f6, #9333ea)', color: '#fff', fontSize: '0.6875rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.35rem', flexShrink: 0 }}>
