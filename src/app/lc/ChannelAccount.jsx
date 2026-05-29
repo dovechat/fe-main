@@ -192,7 +192,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
     try {
       setQrLoading(true)
       const response = await apiClient.post(
-        `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/qr`,
+        `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/qr`,
         { id_instance: credentials.idInstance, api_token: credentials.apiTokenInstance }
       )
       setQrCode(response.data.qr)
@@ -255,7 +255,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
     try {
       setQrLoading(true)
       const response = await apiClient.post(
-        `/api/v1/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
+        `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
       )
       setQrCode(response.data.qr.qr)
       await updateWhatsAppGreen(tenantId, lineId, {})
