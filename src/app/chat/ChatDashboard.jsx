@@ -51,7 +51,7 @@ export default function ChatDashboard() {
       setLoading(true);
       const params = {};
       if (filterLine) params.line_id = filterLine;
-      if (filterChannel) params.crm_type = filterChannel;
+      if (filterChannel) params.channel_type = filterChannel;
       if (filterClosed !== null) params.is_closed = filterClosed;
       const data = await fetchConversations(params);
       console.log('data', data);
@@ -102,7 +102,7 @@ export default function ChatDashboard() {
       setCreating(true);
       await createConversation({
         line_id: selectedLine.id,
-        crm_type: selectedChannel,
+        channel_type: selectedChannel,
         crm_chat_id: phoneInput,
         client_phone: phoneInput,
       });
@@ -125,7 +125,7 @@ export default function ChatDashboard() {
 
   const channels = useMemo(() => {
     const set = new Set();
-    allConversations.forEach(c => set.add(c.crm_type));
+    allConversations.forEach(c => set.add(c.channel_type));
     return [...set].sort();
   }, [allConversations]);
 
@@ -137,7 +137,7 @@ export default function ChatDashboard() {
       if (searchField === 'phone') return c.client_phone?.toLowerCase().includes(q);
       if (searchField === 'message') return c.last_message?.text?.toLowerCase().includes(q);
       if (searchField === 'line') return c.line_name?.toLowerCase().includes(q);
-      if (searchField === 'channel') return c.crm_type?.toLowerCase().includes(q);
+      if (searchField === 'channel') return c.channel_type?.toLowerCase().includes(q);
       if (searchField === 'status') return !c.is_closed ? 'открыт'.includes(q) : 'закрыт'.includes(q);
       return false;
     });

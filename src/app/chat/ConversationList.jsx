@@ -5,9 +5,9 @@ function initials(str) {
   return str.slice(0, 2).toUpperCase()
 }
 
-function dotClass(crm_type) {
-  if (crm_type === 'whatsapp_green' || crm_type === 'waba') return 'wa'
-  if (crm_type === 'telegram_user' || crm_type === 'telegram_bot') return 'tg'
+function dotClass(channel_type) {
+  if (channel_type === 'whatsapp_green' || channel_type === 'waba') return 'wa'
+  if (channel_type === 'telegram_user' || channel_type === 'telegram_bot') return 'tg'
   return 'wa'
 }
 
@@ -57,7 +57,7 @@ export default function ConversationList({ conversations, activeConversationId, 
               <div className="dc-conv-item-inner">
                 <div className="dc-conv-avatar">
                   {initials(conv.client_phone)}
-                  <span className={`dc-conv-dot ${dotClass(conv.crm_type)}`} />
+                  <span className={`dc-conv-dot ${dotClass(conv.channel_type)}`} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
@@ -79,7 +79,7 @@ export default function ConversationList({ conversations, activeConversationId, 
                     )}
                   </div>
                   <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', color: '#94a3b8' }}>
-                    {conv.line_name} • {conv.crm_type} 
+                    {conv.line_name} • {conv.channel_type} 
                   </div>
                 </div>
               </div>

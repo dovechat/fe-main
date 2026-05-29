@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Building2, Users, Pencil, Landmark, ArrowLeft } from 'lucide-react'
 import MembersList from './MembersList'
 
+
 function paymentLabel(p) {
   if (p === 'acquiring') return 'Эквайринг'
   if (p === 'invoice') return 'Счёт'
@@ -26,7 +27,7 @@ const PLACEHOLDER = {
   inn: '0000000000',
 }
 
-function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
+function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onEditCrm }) {
   const bd = tenant.banking_details || {}
   const [staffCount, setStaffCount] = useState(
     () => (tenant.employee_count != null ? tenant.employee_count : null),
@@ -129,6 +130,29 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
                 )}
               </div>
 
+
+
+<div className="dc-req-block">
+  <p className="dc-muted-xs" style={{ marginBottom: '0.5rem' }}>Интеграция CRM</p>
+  <div className="dc-req-grid">
+    <div>
+      <span className="dc-muted-xs">При отсутствии сделки: </span>
+      <span className="dc-strong">
+        {crmSettings?.no_deal_action === 'create_lead' ? 'Создать лид'
+          : crmSettings?.no_deal_action === 'create_deal' ? 'Создать сделку'
+          : 'Ничего не делать'}
+      </span>
+    </div>
+    <div>
+      <span className="dc-muted-xs">Создавать контакт: </span>
+      <span className="dc-strong">{crmSettings?.auto_create_contact ? 'Да' : 'Нет'}</span>
+    </div>
+  </div>
+</div>
+
+
+
+
               <div className="dc-detail-toolbar">
                 <button type="button" className="dc-btn dc-btn-primary" onClick={onEdit}>
                   <Pencil size={16} aria-hidden />
@@ -138,6 +162,10 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack }) {
                   <Landmark size={16} aria-hidden />
                   {bd.bank_name || bd.account_number ? 'Изменить реквизиты' : 'Добавить реквизиты'}
                 </button>
+
+<button type="button" className="dc-btn dc-btn-outline" onClick={onEditCrm}>
+  Настройки CRM
+</button>
               </div>
             </div>
           </div>

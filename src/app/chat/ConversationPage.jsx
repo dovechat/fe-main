@@ -131,7 +131,7 @@ export default function ConversationPage({ conversationId }) {
       waba: '/messages/waba',
       vk: '/messages/vk',
     }
-    const endpoint = endpoints[conversation?.crm_type] || '/messages/tguser'
+    const endpoint = endpoints[conversation?.channel_type] || '/messages/tguser'
     const formData = new FormData()
     formData.append('data', JSON.stringify({
       conversation_id: conversationId,
@@ -175,7 +175,7 @@ export default function ConversationPage({ conversationId }) {
                 {conversation?.client_phone || 'Без номера'}
               </div>
               <div style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
-                {conversation?.crm_type} • {conversation?.crm_chat_id}
+                {conversation?.channel_type} • {conversation?.crm_chat_id}
               </div>
             </div>
           </div>

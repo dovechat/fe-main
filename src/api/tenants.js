@@ -49,3 +49,13 @@ export const updateBankingRu = async (tenantId, data) => {
   const response = await apiClient.patch(`/tenant/${tenantId}/banking/ru`, data)
   return response.data
 }
+
+export const getCrmSettings = async (tenantId) => {
+  const response = await apiClient.get(`/tenant/${tenantId}/crm-settings`)
+  return response.data
+}
+
+export const updateCrmSettings = async (tenantId, data) => {
+  const response = await apiClient.patch(`/tenant/${tenantId}/crm-settings`, data)
+  return response.data
+}

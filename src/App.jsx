@@ -10,7 +10,7 @@ import TenantDetails from './app/lc/TenantDetails'
 import EditTenant from './app/lc/EditTenant'
 import CreateTenant from './app/lc/CreateTenant'
 import BankingDetailsRu from './app/lc/BankingDetailsRu'
-import { getTenant } from './api/tenants'
+import { getTenant, getCrmSettings } from './api/tenants'
 import LineList from './app/lc/LineList'
 import LineDetails from './app/lc/LineDetails'
 import CreateLine from './app/lc/CreateLine'
@@ -20,6 +20,7 @@ import { getChannelAccount } from './api/lines'
 import BillingDashboard from './app/lc/BillingDashboard'
 import NotificationHistory from './app/lc/NotificationHistory'
 import NotificationSettings from './app/lc/NotificationSettings'
+import CrmSettingsModal from './app/lc/CrmSettingsModal'
 
 
 function CompaniesPage() {
@@ -134,15 +135,32 @@ function CompaniesDetailsPage() {
   const { tenantId } = useParams()
   const navigate = useNavigate()
   const [tenant, setTenant] = useState(null)
-  useEffect(() => { getTenant(tenantId).then(setTenant).catch(() => {}) }, [tenantId])
+  const [crmSettings, setCrmSettings] = useState(null)
+  const [showCrmModal, setShowCrmModal] = useState(false)
+  useEffect(() => {
+    getTenant(tenantId).then(setTenant).catch(() => {})
+    getCrmSettings(tenantId).then(setCrmSettings).catch(() => setCrmSettings(null))
+  }, [tenantId])
   if (!tenant) return <div style={{padding:'2rem'}}>Загрузка...</div>
   return (
-    <TenantDetails
-      tenant={tenant}
-      onEdit={() => navigate(`/lc/companies/${tenantId}/edit`)}
-      onEditBanking={() => navigate(`/lc/companies/${tenantId}/banking`)}
-      onBack={() => navigate('/lc/companies')}
-    />
+    <>
+      <TenantDetails
+        tenant={tenant}
+        onEdit={() => navigate(`/lc/companies/${tenantId}/edit`)}
+        onEditBanking={() => navigate(`/lc/companies/${tenantId}/banking`)}
+        onBack={() => navigate('/lc/companies')}
+        crmSettings={crmSettings}
+        onEditCrm={() => setShowCrmModal(true)}
+      />
+      {showCrmModal && (
+        <CrmSettingsModal
+          tenantId={tenantId}
+          settings={crmSettings}
+          onSaved={(updated) => { setCrmSettings(updated); setShowCrmModal(false) }}
+          onClose={() => setShowCrmModal(false)}
+        />
+      )}
+    </>
   )
 }
 
@@ -163,6 +181,7 @@ function CompaniesBankingPage() {
   if (!tenant) return <div style={{padding:'2rem'}}>Загрузка...</div>
   return <BankingDetailsRu tenant={tenant} onSaved={() => navigate('/lc/companies')} onCancel={() => navigate(`/lc/companies/${tenantId}`)} />
 }
+
 
 export default function App() {
   return (
