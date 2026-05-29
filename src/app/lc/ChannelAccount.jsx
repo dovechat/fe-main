@@ -148,7 +148,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       setShowCodeInput(true)
       alert('Код отправлен в Telegram!')
     } catch (err) {
-      setError('Ошибка при запросе кода: ' + err.message)
+      setError('Ошибка при запросе кода: '  + (err.response?.data?.detail || err.message))
     } finally {
       setAuthLoading(false)
     }
@@ -178,7 +178,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       alert('Аккаунт успешно авторизован!')
       onBack()
     } catch (err) {
-      setError('Ошибка проверки кода: ' + err.message)
+      setError('Ошибка проверки кода: ' +  + (err.response?.data?.detail || err.message))
     } finally {
       setAuthLoading(false)
     }
@@ -197,7 +197,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       )
       setQrCode(response.data.qr)
     } catch (err) {
-      setError('Ошибка получения QR: ' + err.message)
+      setError('Ошибка получения QR: ' +  + (err.response?.data?.detail || err.message))
     } finally {
       setQrLoading(false)
     }
@@ -214,7 +214,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       setTgQrToken(data.token)
       pollTgQrStatus(data.token)
     } catch (err) {
-      setError('Ошибка получения QR: ' + err.message)
+      setError('Ошибка получения QR: ' +  + (err.response?.data?.detail || err.message))
     } finally {
       setTgQrLoading(false)
     }
@@ -222,7 +222,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
 
   const pollTgQrStatus = async (token) => {
     if (!token || token === 'undefined') {
-      setError('Ошибка получения токена QR')
+      setError('Ошибка получения токена QR' + (err.response?.data?.detail || err.message))
       return
     }
     let attempts = 0
@@ -246,7 +246,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         }
       } catch (err) {
         clearInterval(interval)
-        setError('Ошибка проверки QR: ' + err.message)
+        setError('Ошибка проверки QR: ' + (err.response?.data?.detail || err.message))
       }
     }, 3000)
   }
@@ -261,7 +261,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       await updateWhatsAppGreen(tenantId, lineId, {})
       pollGreenStatus()
     } catch (err) {
-      setError('Ошибка подключения: ' + err.message)
+      setError('Ошибка подключения: ' + (err.response?.data?.detail || err.message))
     } finally {
       setQrLoading(false)
     }
