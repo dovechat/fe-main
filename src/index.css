@@ -42,13 +42,9 @@ button {
   min-width: 0;
   scrollbar-gutter: stable;
   background:
-    linear-gradient(90deg, transparent 10%,rgba(255, 129, 27, 0.14) 100%),
-    linear-gradient(
-      135deg,
-      rgba(239, 246, 255, 0.85) 0%,
-      #f8faff 55%,
-      rgba(245, 243, 255, 0.8) 100%
-    );
+    linear-gradient(145deg,
+     rgba(255, 255, 255, 0.300) 40%,
+     rgba(255, 130, 27, 0.100) )
 }
 .shell-content:has(.dc-conv-wrap) {
   overflow: hidden;
