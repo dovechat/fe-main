@@ -172,14 +172,41 @@ button {
 /* ===== LOGIN ===== */
 
 .login-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f0f4ff 0%, #fff 100%);
+  background: #fff;
+  overflow: hidden;
+}
+
+/* 1) повторяющаяся текстура — еле заметная */
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('./assets/white-grey-flecks.png');
+  background-repeat: repeat;
+  /* background-size: 128px 128px; */
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* 2) птица по центру — еле заметная, выше flecks */
+.login-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('./assets/logo_main_just_bird-Ch3fb1gZ.png') center center / min(420px, 52vmin) no-repeat;
+  background-size: contain;
+  opacity: 0.07;
+  pointer-events: none;
 }
 
 .login-card {
+  position: relative;
+  z-index: 1;
   background: #fff;
   border-radius: 1rem;
   box-shadow: 0 20px 40px rgba(74, 127, 255, 0.1);
