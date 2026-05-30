@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react'
 import { createLine, addChannel, renewChannel } from '../../api/lines'
 import { getTariffs } from '../../api/tariffs'
+import { CHANNEL_TYPES } from '../../utils/channelIcons'
+import ChannelIcon from '../../components/ChannelIcon'
 import Input from './Input'
 import Button from './Button'
-
-const CHANNEL_TYPES = [
-  { value: 'telegram_bot', label: 'Telegram Bot', icon: '🤖' },
-  { value: 'telegram_user', label: 'Telegram User', icon: '👤' },
-  { value: 'whatsapp_green', label: 'WhatsApp Green', icon: '📲' },
-  { value: 'waba', label: 'WhatsApp Business', icon: '💼' },
-  { value: 'vk', label: 'VK', icon: '👥' },
-]
 
 function buildInitialSelections() {
   return Object.fromEntries(
@@ -209,7 +203,7 @@ function CreateLine({ tenantId, lineId, existingChannels = [], renewMode = false
                               </svg>
                             )}
                           </div>
-                          <span style={{ fontSize: '22px' }}>{channel.icon}</span>
+                          <ChannelIcon channelType={channel.value} size={28} />
                           <span style={{ fontWeight: '500', fontSize: '15px', flex: 1 }}>{channel.label}</span>
 
                           {renewMode && (() => {

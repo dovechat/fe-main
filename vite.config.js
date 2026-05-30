@@ -6,7 +6,13 @@ export default defineConfig({
   base: '/',
   server: {
     port: 5173,
-    allowedHosts: true
+    allowedHosts: true,
+    proxy: {
+      '/api/v1': {
+        target: 'http://localhost:8070',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',

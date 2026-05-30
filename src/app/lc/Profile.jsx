@@ -145,7 +145,8 @@ export default function Profile() {
         </div>
 
         <div className="dc-prof-tabs-root">
-          <div className="dc-prof-tabs-list" role="tablist">
+          <div className="dc-prof-tabs-viewport">
+            <div className="dc-prof-tabs-list" role="tablist">
             {TAB_IDS.map(id => (
               <button
                 key={id}
@@ -158,11 +159,11 @@ export default function Profile() {
                 {{ general: 'Общие', notifications: 'Уведомления', security: 'Безопасность', preferences: 'Настройки' }[id]}
               </button>
             ))}
+            </div>
           </div>
 
-          {/* ── Общие ── */}
-          {activeTab === 'general' && (
-            <div className="dc-prof-tab-panels">
+          <div className="dc-prof-tab-panels">
+            <div className={`dc-prof-tab-panel ${activeTab === 'general' ? 'dc-prof-tab-panel--active' : ''}`}>
               <div className="dc-prof-stack">
 
                 <div className="dc-prof-card dc-prof-card--section">
@@ -238,11 +239,8 @@ export default function Profile() {
 
               </div>
             </div>
-          )}
 
-          {/* ── Уведомления ── */}
-          {activeTab === 'notifications' && (
-            <div className="dc-prof-tab-panels">
+            <div className={`dc-prof-tab-panel ${activeTab === 'notifications' ? 'dc-prof-tab-panel--active' : ''}`}>
               <div className="dc-prof-stack">
                 {!currentTenantId ? (
                   <div className="dc-prof-card dc-prof-card--section">
@@ -280,11 +278,8 @@ export default function Profile() {
                 )}
               </div>
             </div>
-          )}
 
-          {/* ── Безопасность ── */}
-          {activeTab === 'security' && (
-            <div className="dc-prof-tab-panels">
+            <div className={`dc-prof-tab-panel ${activeTab === 'security' ? 'dc-prof-tab-panel--active' : ''}`}>
               <div className="dc-prof-stack">
                 <div className="dc-prof-card dc-prof-card--section">
                   <div className="dc-prof-card-head">
@@ -331,12 +326,8 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          )}
 
-          {/* ── Настройки ── */}
-
-          {activeTab === 'preferences' && (
-            <div className="dc-prof-tab-panels">
+            <div className={`dc-prof-tab-panel ${activeTab === 'preferences' ? 'dc-prof-tab-panel--active' : ''}`}>
               <div className="dc-prof-stack">
                 <div className="dc-prof-card dc-prof-card--section">
                   <div className="dc-prof-card-head">
@@ -365,8 +356,7 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          )}
-
+          </div>
         </div>
       </div>
     </div>

@@ -145,13 +145,13 @@ export default function ChatDashboard() {
 
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#6b7280' }}>
+    <div className="dc-conv-wrap" style={{ alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
       Загрузка...
     </div>
   );
 
   if (error) return (
-    <div style={{ padding: '32px', color: '#ef4444' }}>Ошибка: {error}</div>
+    <div className="dc-conv-wrap" style={{ padding: '2rem', color: '#ef4444' }}>Ошибка: {error}</div>
   );
 
   console.log('filteredConversations:', filteredConversations)

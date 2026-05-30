@@ -6,9 +6,9 @@ import {
   Settings,
   Sparkles,
   CheckCircle,
-  Package,
-  Smartphone,
 } from 'lucide-react'
+import ChannelIcon from '../../components/ChannelIcon'
+import { channelLabel } from '../../utils/channelIcons'
 
 /* ─── helpers ─────────────────────────────────────────────── */
 
@@ -17,17 +17,6 @@ function normalizeAccounts(raw) {
   if (Array.isArray(raw)) return raw
   if (Array.isArray(raw.channels)) return raw.channels
   return [raw]
-}
-
-function channelLabel(type) {
-  switch (type) {
-    case 'telegram_bot':   return 'Telegram Bot'
-    case 'telegram_user':  return 'Telegram User'
-    case 'whatsapp_green': return 'WhatsApp'
-    case 'waba':           return 'WhatsApp Business'
-    case 'vk':             return 'VK'
-    default:               return type || 'Канал'
-  }
 }
 
 function uiKind(type) {
@@ -64,6 +53,7 @@ function buildPlatforms(line, rawAccounts) {
           : 'disconnected'
     return [
       {
+        type: line.channel_type,
         kind: uiKind(line.channel_type),
         label: channelLabel(line.channel_type),
         identifier: phone || line.name || '—',
@@ -78,6 +68,7 @@ function buildPlatforms(line, rawAccounts) {
     const mapped =
       st === 'connected' ? 'connected' : st === 'connecting' || st === 'pending' ? 'pending' : 'disconnected'
     return {
+      type: ct,
       kind: uiKind(ct),
       label: channelLabel(ct),
       identifier: acc.phone || acc.external_id || acc.identifier || phone || ct,
@@ -88,37 +79,6 @@ function buildPlatforms(line, rawAccounts) {
 }
 
 /* ─── sub-components ──────────────────────────────────────── */
-
-function PlatformIcon({ kind }) {
-  if (kind === 'whatsapp') {
-    return (
-      <div className="dc-platform-icon-wa">
-        <MessageSquare size={16} />
-      </div>
-    )
-  }
-  if (kind === 'telegram') {
-    return (
-      <div className="dc-platform-icon-tg">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-          <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.45 3.62-.52.36-.99.53-1.42.52-.47-.01-1.37-.27-2.03-.49-.82-.27-1.47-.42-1.42-.88.03-.24.37-.49 1.03-.74 4.02-1.75 6.7-2.91 8.05-3.47 3.84-1.61 4.64-1.89 5.16-1.9.11 0 .37.03.54.17.14.12.18.27.2.38.01.09.03.32.01.5z" />
-        </svg>
-      </div>
-    )
-  }
-  if (kind === 'waba') {
-    return (
-      <div className="dc-platform-icon-waba">
-        <Smartphone size={16} />
-      </div>
-    )
-  }
-  return (
-    <div className="dc-platform-icon-default">
-      <Package size={16} />
-    </div>
-  )
-}
 
 function StatusBadge({ status }) {
   if (status === 'connected') {
@@ -380,7 +340,7 @@ function LineList({ tenantId, companyName, onCreateClick, onLineClick }) {
                   {platforms.map((p, idx) => (
                     <div key={`${line.id}-${idx}`} className="dc-platform-row">
                       <div className="dc-platform-left">
-                        <PlatformIcon kind={p.kind} />
+                        <ChannelIcon channelType={p.type} size={32} />
                         <div className="dc-platform-meta">
                           <p className="dc-platform-label">{p.label}</p>
                           <p className="dc-platform-id">{p.identifier}</p>

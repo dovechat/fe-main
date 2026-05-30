@@ -2,31 +2,19 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  MessageSquare,
-  Smartphone,
-  Package,
   CheckCircle,
   Trash2,
   Power,
   Plus,
   Settings,
 } from 'lucide-react'
+import ChannelIcon from '../../components/ChannelIcon'
+import { channelLabel } from '../../utils/channelIcons'
 import { getLine, updateLine, deleteLine, getChannelAccount, toggleChannelConnection } from '../../api/lines'
 import apiClient from '../../services/accountClient'
 import { useAuth } from '../../context/AuthContext'
 
 /* ─── helpers ─────────────────────────────────────────────── */
-
-function channelLabel(type) {
-  switch (type) {
-    case 'telegram_bot':   return 'Telegram Bot'
-    case 'telegram_user':  return 'Telegram'
-    case 'whatsapp_green': return 'WhatsApp'
-    case 'waba':           return 'WhatsApp Business'
-    case 'vk':             return 'VK'
-    default:               return type || 'Канал'
-  }
-}
 
 function uiKind(type) {
   if (type === 'whatsapp_green') return 'whatsapp'
@@ -48,40 +36,6 @@ function formatDateFull(iso) {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
-}
-
-/* ─── platform icon ───────────────────────────────────────── */
-
-function PlatformIcon({ kind }) {
-  const style = { width: '2.5rem', height: '2.5rem' }
-  if (kind === 'whatsapp') {
-    return (
-      <div className="dc-platform-icon-wa" style={style}>
-        <MessageSquare size={20} />
-      </div>
-    )
-  }
-  if (kind === 'telegram') {
-    return (
-      <div className="dc-platform-icon-tg" style={style}>
-        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-          <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.45 3.62-.52.36-.99.53-1.42.52-.47-.01-1.37-.27-2.03-.49-.82-.27-1.47-.42-1.42-.88.03-.24.37-.49 1.03-.74 4.02-1.75 6.7-2.91 8.05-3.47 3.84-1.61 4.64-1.89 5.16-1.9.11 0 .37.03.54.17.14.12.18.27.2.38.01.09.03.32.01.5z" />
-        </svg>
-      </div>
-    )
-  }
-  if (kind === 'waba') {
-    return (
-      <div className="dc-platform-icon-waba" style={style}>
-        <Smartphone size={20} />
-      </div>
-    )
-  }
-  return (
-    <div className="dc-platform-icon-default" style={style}>
-      <Package size={20} />
-    </div>
-  )
 }
 
 /* ─── status badge ────────────────────────────────────────── */
@@ -244,7 +198,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
   if (!line)   return <div className="dc-fe-page"><p className="dc-muted">Линия не найдена</p></div>
 
   const channelRows = buildChannelRows()
-  const uniqueKinds = [...new Set(channelRows.map(c => c.kind))].filter(k => k !== 'other')
+  const uniqueTypes = [...new Set(channelRows.map(c => c.type))].filter(Boolean)
 
   return (
     <div className="dc-fe-page dc-fe-stack">
@@ -288,7 +242,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '0.35rem' }}>
-              {uniqueKinds.map(k => <PlatformIcon key={k} kind={k} />)}
+              {uniqueTypes.map(t => <ChannelIcon key={t} channelType={t} size={40} />)}
             </div>
             <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
               <StatusBadge status={line.status} />
@@ -358,7 +312,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
               return (
                 <div key={`${ch.type}-${idx}`} className="dc-platform-row">
                   <div className="dc-platform-left">
-                    <PlatformIcon kind={ch.kind} />
+                    <ChannelIcon channelType={ch.type} size={32} />
                     <div className="dc-platform-meta">
                       <p className="dc-platform-label">{ch.label}</p>
                       <p className="dc-platform-id">{ch.identifier !== '—' ? ch.identifier : <span className="dc-muted-xs">телефон или ID</span>}</p>
