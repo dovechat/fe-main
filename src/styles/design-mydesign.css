@@ -769,10 +769,8 @@
 
 /* Профиль — 1:1 с dchat-fe-mydesign Profile.tsx (Tailwind → чистый CSS) */
 .dc-prof-page {
-  height: 100%;
-  min-height: 0;
-  overflow: auto;
-  scrollbar-gutter: stable;
+  min-height: 100%;
+  overflow: visible;
   background: transparent;
 }
 
@@ -780,6 +778,8 @@
   max-width: 64rem;
   margin: 0 auto;
   padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dc-prof-header-block {
@@ -943,13 +943,16 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 .dc-prof-tabs-viewport {
   width: 100%;
+  max-width: 100%;
   display: flex;
   justify-content: center;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .dc-prof-tabs-list {
@@ -996,6 +999,8 @@
   outline: none;
   position: relative;
   min-height: 32rem;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .dc-prof-tab-panel {

@@ -38,7 +38,8 @@ button {
 
 .shell-content {
   flex: 1;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   min-width: 0;
   scrollbar-gutter: stable;
   background:
