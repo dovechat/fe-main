@@ -335,6 +335,40 @@ button {
   cursor: not-allowed;
 }
 
+.login-footer {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.login-footer-link {
+  color: #4A7FFF;
+  text-decoration: none;
+}
+
+.login-footer-link:hover {
+  text-decoration: underline;
+}
+
+.login-hint {
+  font-size: 13px;
+  color: #555;
+  margin: 0 0 16px;
+}
+
+.login-checkbox-label {
+  display: flex;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.login-checkbox-label input {
+  width: auto;
+  flex-shrink: 0;
+}
+
 /* ===== PROFILE ===== */
 
 .profile-page { padding: 2rem; }

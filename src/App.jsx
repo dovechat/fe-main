@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Shell from './components/Shell'
 import Login from './pages/Login'
+import Register from './pages/Register'
+import GuestOnly from './components/GuestOnly'
 import Profile from './app/lc/Profile'
 import ChatDashboard from './app/chat/ChatDashboard'
 import TenantList from './app/lc/TenantList'
@@ -188,7 +190,10 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+          <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
+          <Route path="/register/verify" element={<GuestOnly><Register /></GuestOnly>} />
+          <Route path="/register/password" element={<GuestOnly><Register /></GuestOnly>} />
           <Route element={<Shell />}>
             <Route path="/" element={<Navigate to="/chats" replace />} />
             <Route path="/chats/*" element={<ChatDashboard />} />
