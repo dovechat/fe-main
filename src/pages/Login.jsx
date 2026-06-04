@@ -105,6 +105,10 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      <div className='login-background-simple'></div>
+      <div className='login-background-bird'>
+        {/* <div className='login-background-bird-cover'></div> */}
+      </div>
       <div className="login-card">
 
         <div className="login-logo">
