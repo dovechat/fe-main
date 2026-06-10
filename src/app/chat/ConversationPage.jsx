@@ -42,23 +42,13 @@ export default function ConversationPage({ conversationId }) {
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data)
         if (data.type === 'new_message') {
-          setMessages(prev => {
-            if (data.data.direction === 'outbound') {
-              const hasTemp = prev.some(m => m.id.toString().startsWith('temp-') && m.text === data.data.text)
-              if (hasTemp) {
-                return prev.map(m =>
-                  m.id.toString().startsWith('temp-') && m.text === data.data.text
-                    ? { ...data.data, id: data.data.id }
-                    : m
-                )
-              }
-            }
-            return prev.some(m => m.id === data.data.id) ? prev : [...prev, data.data]
-          })
+          setMessages(prev =>
+            prev.some(m => String(m.id) === String(data.data.id)) ? prev : [...prev, data.data]
+          )
         } else if (data.type === 'message_status') {
           setMessages(prev => prev.map(msg =>
             String(msg.id) === String(data.data.message_id)
-              ? { ...msg, status: data.data.status, mime_type: data.data.mime_type }
+              ? { ...msg, status: data.data.status, media: data.data.media?.length ? data.data.media : msg.media }
               : msg
           ))
         }
@@ -144,7 +134,12 @@ export default function ConversationPage({ conversationId }) {
     }))
     files.forEach(f => formData.append('files', f))
     try {
-      await api.post(endpoint, formData)
+      const response = await api.post(endpoint, formData)
+      if (response.data?.id) {
+        setMessages(prev => prev.map(m =>
+          m.id === tempMessage.id ? response.data : m
+        ))
+      }
     } catch (error) {
       console.error('Failed to send message:', error)
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk, updateWhatsAppGreen, updateWaba } from '../../api/lines'
 import Button from './Button'
 import Input from './Input'
@@ -21,6 +21,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const [tgQrCode, setTgQrCode] = useState(null)
   const [tgQrToken, setTgQrToken] = useState(null)
   const [tgQrLoading, setTgQrLoading] = useState(false)
+  const pollIntervalRef = useRef(null)
 
   useEffect(() => {
     let isMounted = true
@@ -53,14 +54,20 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         console.error('Ошибка загрузки:', err)
         if (isMounted) initEmptyCredentials()
       } finally {
-        if (isMounted) setLoading(false)
+        console.log('!!! -- !!! ---- finally isMounted:', isMounted, 'setting loading false')
+        setLoading(false)
       }
     }
 
     loadAccountInfo()
 
-    return () => { isMounted = false }
+    isMounted = false
+    clearInterval(pollIntervalRef.current)
   }, [tenantId, lineId, channelType])
+
+  useEffect(() => {
+      return () => clearInterval(pollIntervalRef.current)
+  }, [])
 
   const initEmptyCredentials = () => {
     switch (channelType) {
@@ -258,8 +265,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
       )
       setQrCode(response.data.qr.qr)
+      const { id_instance, api_token } = response.data
       await updateWhatsAppGreen(tenantId, lineId, {})
-      pollGreenStatus()
+      pollGreenStatus(id_instance, api_token)
     } catch (err) {
       setError('Ошибка подключения: ' + (err.response?.data?.detail || err.message))
     } finally {
@@ -267,21 +275,34 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
     }
   }
 
-  const pollGreenStatus = () => {
-    const interval = setInterval(async () => {
-      try {
-        const accounts = await getChannelAccount(tenantId, lineId)
-        const account = Array.isArray(accounts)
-          ? accounts.find(a => a.channel_type === 'whatsapp_green')
-          : accounts
-        if (account?.connection_status === 'connected') {
-          clearInterval(interval)
-          onBack()
-        }
-      } catch {
-        clearInterval(interval)
-      }
-    }, 2000)
+
+  const pollGreenStatus = (idInstance, apiToken) => {
+      pollIntervalRef.current = setInterval(async () => {
+          try {
+              const [accountsRes, stateRes] = await Promise.allSettled([
+                  getChannelAccount(tenantId, lineId),
+                  fetch(`https://api.green-api.com/waInstance${idInstance}/getStateInstance/${apiToken}`)
+                      .then(r => r.json())
+              ])
+              if (accountsRes.status === 'fulfilled') {
+                  const accounts = accountsRes.value
+                  const account = Array.isArray(accounts)
+                      ? accounts.find(a => a.channel_type === 'whatsapp_green')
+                      : accounts
+                  if (account?.connection_status === 'connected') {
+                      clearInterval(pollIntervalRef.current)
+                      onBack()
+                      return
+                  }
+              }
+              if (stateRes.status === 'fulfilled' && stateRes.value?.stateInstance === 'authorized') {
+                  clearInterval(pollIntervalRef.current)
+                  onBack()
+              }
+          } catch {
+              clearInterval(pollIntervalRef.current)
+          }
+      }, 2000)
   }
 
   const getChannelName = () => {
