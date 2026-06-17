@@ -42,9 +42,22 @@ export default function ConversationPage({ conversationId }) {
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data)
         if (data.type === 'new_message') {
-          setMessages(prev =>
-            prev.some(m => String(m.id) === String(data.data.id)) ? prev : [...prev, data.data]
-          )
+          setMessages(prev => {
+            if (prev.some(m => String(m.id) === String(data.data.id))) return prev
+            if (data.data.direction === 'outbound') {
+              const tempIdx = prev.findIndex(m =>
+                String(m.id).startsWith('temp-') &&
+                m.text === data.data.text &&
+                m.direction === 'outbound'
+              )
+              if (tempIdx !== -1) {
+                const next = [...prev]
+                next[tempIdx] = data.data
+                return next
+              }
+            }
+            return [...prev, data.data]
+          })
         } else if (data.type === 'message_status') {
           setMessages(prev => prev.map(msg =>
             String(msg.id) === String(data.data.message_id)
