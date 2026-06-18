@@ -158,6 +158,20 @@ export default function ConversationPage({ conversationId }) {
     }
   }
 
+  const handleSendTemplate = async (tpl) => {
+    if (!conversation) return
+    const formData = new FormData()
+    formData.append('conversation_id', conversationId)
+    formData.append('template_name', tpl.name)
+    formData.append('language', tpl.language)
+    formData.append('components', JSON.stringify(tpl.components))
+    try {
+      await api.post('/messages/waba/template', formData)
+    } catch (error) {
+      console.error('Failed to send template:', error)
+    }
+  }
+
   const handleToggleClose = async () => {
     const newStatus = !conversation.is_closed
     await setConversationStatus(conversationId, newStatus)
@@ -212,7 +226,7 @@ export default function ConversationPage({ conversationId }) {
       </div>
 
       <div className="dc-conv-input-bar">
-        <MessageInput onSend={handleSendMessage} disabled={!connectionStatus} />
+        <MessageInput onSend={handleSendMessage} disabled={!connectionStatus} channelType={conversation?.channel_type} />
       </div>
     </div>
   )

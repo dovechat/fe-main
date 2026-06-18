@@ -501,3 +501,32 @@
   color: #6b7280;
   width: 1rem;
 }
+
+/* templates for waba */
+.dc-template-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  min-width: 220px;
+  padding: 0.25rem 0;
+}
+.dc-template-item {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1f2937;
+}
+.dc-template-item:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
