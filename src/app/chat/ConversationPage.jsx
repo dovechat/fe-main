@@ -226,7 +226,12 @@ export default function ConversationPage({ conversationId }) {
       </div>
 
       <div className="dc-conv-input-bar">
-        <MessageInput onSend={handleSendMessage} disabled={!connectionStatus} channelType={conversation?.channel_type} />
+        <MessageInput
+          onSend={handleSendMessage}
+          onSendTemplate={handleSendTemplate}
+          disabled={!connectionStatus}
+          channelType={conversation?.channel_type}
+        />
       </div>
     </div>
   )
