@@ -66,7 +66,14 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
           <div className="dc-modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="dc-company-title" style={{ marginBottom: '1rem' }}>Инструкция по подключению</h2>
             <div className="dc-modal-body">
-              <p>Текст инструкции</p>
+              <p>Настройка Битрикс 24</p>
+              <p>Создайте линию в DoveChat, откройте в Bitrix 24 CRM - Клиенты - Контакт центр
+              <p>Найдите коннектор DoveChat c нужным каналом, нажмите "создать линию"
+              <p>Откроется форма, в ней надо нажать кнопку вверху продолжить настройку.
+              <p>Откроется окно с формой аутентификации в DoveChat, авторизуйтесь.
+              <p>Далее выберите компанию, потом линию.
+              <p>В конце должна появиться надопись "Линия подклчена" с зеленой галкой.
+              <p>Если нет, а также в случае других проблем обратитесь в поддержку.
             </div>
             <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
               <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowInstruction(false)}>Закрыть</button>
