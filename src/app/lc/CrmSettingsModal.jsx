@@ -38,19 +38,19 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
             <option value="create_deal">Создать сделку</option>
           </select>
         </div>
-        <div className="form-group" style={{ marginTop: '0.75rem' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={autoCreateContact}
-              onChange={(e) => setAutoCreateContact(e.target.checked)}
-            />
-            <span className="dc-muted-xs">Создавать контакт автоматически</span>
-          </label>
-          <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" style={{ marginLeft: '1.5rem' }} onClick={() => setShowInstruction(true)}>
-            Инструкция
-          </button>
-        </div>
+<div className="form-group" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+    <input
+      type="checkbox"
+      checked={autoCreateContact}
+      onChange={(e) => setAutoCreateContact(e.target.checked)}
+    />
+    <span className="dc-muted-xs">Создавать контакт автоматически</span>
+  </label>
+  <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" onClick={() => setShowInstruction(true)}>
+    Инструкция
+  </button>
+</div>
         {error && <p className="error" style={{ margin: '0.75rem 0 0' }}>{error}</p>}
         <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
           <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowInstruction(true)}>Инструкция</button>
