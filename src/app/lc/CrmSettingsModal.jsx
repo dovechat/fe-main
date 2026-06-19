@@ -6,6 +6,7 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
   const [autoCreateContact, setAutoCreateContact] = useState(settings?.auto_create_contact ?? true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showInstruction, setShowInstruction] = useState(false)
 
   const handleSave = async () => {
     setLoading(true)
@@ -49,12 +50,27 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
         </div>
         {error && <p className="error" style={{ margin: '0.75rem 0 0' }}>{error}</p>}
         <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
+          <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowInstruction(true)}>Инструкция</button>
           <button type="button" className="dc-btn dc-btn-outline" onClick={onClose}>Отмена</button>
           <button type="button" className="dc-btn dc-btn-primary" disabled={loading} onClick={handleSave}>
             {loading ? '…' : 'Сохранить'}
           </button>
         </div>
       </div>
+
+      {showInstruction && (
+        <div className="dc-modal-overlay" onClick={() => setShowInstruction(false)}>
+          <div className="dc-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="dc-company-title" style={{ marginBottom: '1rem' }}>Инструкция по подключению</h2>
+            <div className="dc-modal-body">
+              <p>Текст инструкции</p>
+            </div>
+            <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
+              <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowInstruction(false)}>Закрыть</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
