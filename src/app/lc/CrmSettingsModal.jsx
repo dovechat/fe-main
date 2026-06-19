@@ -38,42 +38,40 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
             <option value="create_deal">Создать сделку</option>
           </select>
         </div>
-<div className="form-group" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-    <input
-      type="checkbox"
-      checked={autoCreateContact}
-      onChange={(e) => setAutoCreateContact(e.target.checked)}
-    />
-    <span className="dc-muted-xs">Создавать контакт автоматически</span>
-  </label>
-  <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" onClick={() => setShowInstruction(true)}>
-    Инструкция
-  </button>
-</div>
+        <div className="form-group" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={autoCreateContact}
+              onChange={(e) => setAutoCreateContact(e.target.checked)}
+            />
+            <span className="dc-muted-xs">Создавать контакт автоматически</span>
+          </label>
+          <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" onClick={() => setShowInstruction(true)}>
+            Инструкция
+          </button>
+        </div>
         {error && <p className="error" style={{ margin: '0.75rem 0 0' }}>{error}</p>}
         <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
-          <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowInstruction(true)}>Инструкция</button>
           <button type="button" className="dc-btn dc-btn-outline" onClick={onClose}>Отмена</button>
           <button type="button" className="dc-btn dc-btn-primary" disabled={loading} onClick={handleSave}>
             {loading ? '…' : 'Сохранить'}
           </button>
         </div>
       </div>
-
       {showInstruction && (
         <div className="dc-modal-overlay" onClick={() => setShowInstruction(false)}>
           <div className="dc-modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="dc-company-title" style={{ marginBottom: '1rem' }}>Инструкция по подключению</h2>
             <div className="dc-modal-body">
               <p>Настройка Битрикс 24</p>
-              <p>Создайте линию в DoveChat, откройте в Bitrix 24 CRM - Клиенты - Контакт центр
-              <p>Найдите коннектор DoveChat c нужным каналом, нажмите "создать линию"
-              <p>Откроется форма, в ней надо нажать кнопку вверху продолжить настройку.
-              <p>Откроется окно с формой аутентификации в DoveChat, авторизуйтесь.
-              <p>Далее выберите компанию, потом линию.
-              <p>В конце должна появиться надопись "Линия подклчена" с зеленой галкой.
-              <p>Если нет, а также в случае других проблем обратитесь в поддержку.
+              <p>Создайте линию в DoveChat, откройте в Bitrix 24 CRM - Клиенты - Контакт центр.</p>
+              <p>Найдите коннектор DoveChat с нужным каналом, нажмите "создать линию".</p>
+              <p>Откроется форма, в ней надо нажать кнопку вверху продолжить настройку.</p>
+              <p>Откроется окно с формой аутентификации в DoveChat, авторизуйтесь.</p>
+              <p>Далее выберите компанию, потом линию.</p>
+              <p>В конце должна появиться надпись "Линия подключена" с зелёной галкой.</p>
+              <p>Если нет, а также в случае других проблем обратитесь в поддержку.</p>
             </div>
             <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
               <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowInstruction(false)}>Закрыть</button>
