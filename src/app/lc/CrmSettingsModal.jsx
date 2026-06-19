@@ -47,6 +47,9 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
             />
             <span className="dc-muted-xs">Создавать контакт автоматически</span>
           </label>
+          <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" style={{ marginLeft: '1.5rem' }} onClick={() => setShowInstruction(true)}>
+            Инструкция
+          </button>
         </div>
         {error && <p className="error" style={{ margin: '0.75rem 0 0' }}>{error}</p>}
         <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
