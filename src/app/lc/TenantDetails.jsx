@@ -28,6 +28,7 @@ const PLACEHOLDER = {
 }
 
 function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onEditCrm }) {
+  const [showInstruction, setShowInstruction] = useState(false)
   const bd = tenant.banking_details || {}
   const [staffCount, setStaffCount] = useState(
     () => (tenant.employee_count != null ? tenant.employee_count : null),
@@ -148,6 +149,22 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onE
       <span className="dc-strong">{crmSettings?.auto_create_contact ? 'Да' : 'Нет'}</span>
     </div>
   </div>
+  <button className="dc-btn dc-btn-sm" onClick={() => setShowInstruction(true)} style={{ marginTop: '0.75rem' }}>
+    Инструкция по подключению
+  </button>
+  {showInstruction && (
+    <div className="dc-modal-overlay" onClick={() => setShowInstruction(false)}>
+      <div className="dc-modal" onClick={e => e.stopPropagation()}>
+        <div className="dc-modal-header">
+          <span className="dc-modal-title">Инструкция по подключению CRM</span>
+          <button className="dc-modal-close" onClick={() => setShowInstruction(false)}>×</button>
+        </div>
+        <div className="dc-modal-body">
+          <p>Текст инструкции</p>
+        </div>
+      </div>
+    </div>
+  )}
 </div>
 
 
