@@ -21,7 +21,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-logo">
         <NavLink to="/lc/lines">
-          <img src="/src/assets/logo_main.png" alt="DoveChat" style={{ height: '102px', width: 'auto' }} />
+          <img src={logo} alt="DoveChat" style={{ height: '102px', width: 'auto' }} />
         </NavLink>
       </div>
 
