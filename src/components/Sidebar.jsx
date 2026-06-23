@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MessageSquare, Building2, Network, Bell, CreditCard, User, LogOut } from 'lucide-react'
 import React from 'react'
+import logo from '../assets/logo_main.png'
 
 const APPS = [
   { path: '/chats', label: 'Чаты', icon: MessageSquare },
