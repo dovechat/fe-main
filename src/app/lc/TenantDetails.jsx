@@ -176,7 +176,7 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onE
         <h3 className="dc-company-title" style={{ marginBottom: '0.75rem' }}>
           Сотрудники
         </h3>
-        <MembersList tenantId={tenant.id} onCountChange={setStaffCount} />
+         <MembersList tenantId={tenant.id} /*onCountChange={setStaffCount}*/ />
       </div>
     </div>
   )
