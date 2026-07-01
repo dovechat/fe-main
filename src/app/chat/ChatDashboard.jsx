@@ -103,7 +103,6 @@ export default function ChatDashboard() {
       await createConversation({
         line_id: selectedLine.id,
         channel_type: selectedChannel,
-        crm_chat_id: phoneInput,
         client_phone: phoneInput,
       });
       setShowModal(false);
