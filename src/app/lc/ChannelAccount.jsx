@@ -265,7 +265,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
       )
       setQrCode(response.data.qr.qr)
-      const { id_instance, api_token } = response.data
+      const { id_instance, api_token } = response.data.qr
       await updateWhatsAppGreen(tenantId, lineId, {})
       pollGreenStatus(id_instance, api_token)
     } catch (err) {
