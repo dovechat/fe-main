@@ -553,11 +553,11 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
             {error && <p className="error" style={{ marginTop: '12px' }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-              {/* channelType !== 'whatsapp_green' && (
+              {channelType !== 'vk' && (
                 <button type="submit" className="dc-btn dc-btn-primary" disabled={saving} style={{ flex: 1 }}>
                   {saving ? 'Сохранение...' : 'Сохранить и подключить'}
                 </button>
-              ) */}
+              )}
               <button type="button" className="dc-btn dc-btn-outline" onClick={onBack} style={{ flex: 1 }}>
                 Отмена
               </button>
