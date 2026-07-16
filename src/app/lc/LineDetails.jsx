@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
+  Link,
   MessageSquare,
   Smartphone,
   Package,
@@ -212,6 +213,45 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
     }
   }
 
+  const handleConnectAmo = async (ch) => {
+    if (ch.amo_connected) {
+      if (!confirm('Отвязать линию от AmoCRM?')) return;
+      const token = localStorage.getItem('token');
+      await fetch(`/crm/api/v1/connections/amo/line/${lineId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAccounts(prev => prev.map(a =>
+        a.channel_type === ch.type ? { ...a, amo_connected: false } : a
+      ));
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const accountsResp = await fetch('/crm/api/v1/connections/amo', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const amoAccounts = await accountsResp.json();
+    if (!amoAccounts.length) {
+      alert('Сначала подключите аккаунт AmoCRM в настройках компании');
+      return;
+    }
+    await fetch('/crm/api/v1/connections/amo/line', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        crm_account_id: amoAccounts[0].id,
+        line_id: lineId,
+        channel_type: ch.type,
+      }),
+    });
+    setAccounts(prev => prev.map(a =>
+      a.channel_type === ch.type
+        ? { ...a, amo_connected: true }
+        : a
+    ));
+  };
+
   const buildChannelRows = () => {
     if (!line) return []
     if (accounts.length) {
@@ -224,6 +264,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
           identifier: acc.phone || line.connection_state?.phone || acc.external_id || '—',
           connected: acc.connection_status === 'connected',
           expires_at: acc.expires_at,
+          amo_connected: acc.amo_connected || false,
         }
       })
     }
@@ -235,6 +276,7 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
       identifier: line.connection_state?.phone || line.name || '—',
       connected: line.connection_status === 'connected',
       expires_at: null,
+      amo_connected: false,
     }]
   }
 
@@ -370,6 +412,17 @@ function LineDetails({ tenantId, lineId, onBack, onDeleted }) {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+
+                    <button
+                      type="button"
+                      className={`dc-btn dc-btn-sm ${ch.amo_connected ? 'dc-btn-success' : 'dc-btn-outline'}`}
+                      onClick={() => handleConnectAmo(ch)}
+                    >
+                      <Link size={14} />
+                      {ch.amo_connected ? 'AmoCRM' : 'Подключить AmoCRM'}
+                    </button>
+
+
                     {ch.connected ? (
                       <span className="dc-badge dc-badge-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                         <CheckCircle size={12} />

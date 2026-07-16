@@ -5,6 +5,7 @@ import Shell from './components/Shell'
 import Login from './pages/Login'
 import Profile from './app/lc/Profile'
 import ChatDashboard from './app/chat/ChatDashboard'
+import EmbedChat from './app/chat/EmbedChat'
 import TenantList from './app/lc/TenantList'
 import TenantDetails from './app/lc/TenantDetails'
 import EditTenant from './app/lc/EditTenant'
@@ -21,6 +22,7 @@ import BillingDashboard from './app/lc/BillingDashboard'
 import NotificationHistory from './app/lc/NotificationHistory'
 import NotificationSettings from './app/lc/NotificationSettings'
 import CrmSettingsModal from './app/lc/CrmSettingsModal'
+import AmoSettingsModal from './app/lc/AmoSettingsModal'
 
 
 function CompaniesPage() {
@@ -137,6 +139,7 @@ function CompaniesDetailsPage() {
   const [tenant, setTenant] = useState(null)
   const [crmSettings, setCrmSettings] = useState(null)
   const [showCrmModal, setShowCrmModal] = useState(false)
+  const [showAmoModal, setShowAmoModal] = useState(false)
   useEffect(() => {
     getTenant(tenantId).then(setTenant).catch(() => {})
     getCrmSettings(tenantId).then(setCrmSettings).catch(() => setCrmSettings(null))
@@ -151,7 +154,9 @@ function CompaniesDetailsPage() {
         onBack={() => navigate('/lc/companies')}
         crmSettings={crmSettings}
         onEditCrm={() => setShowCrmModal(true)}
+        onEditAmo={() => setShowAmoModal(true)}
       />
+
       {showCrmModal && (
         <CrmSettingsModal
           tenantId={tenantId}
@@ -160,6 +165,15 @@ function CompaniesDetailsPage() {
           onClose={() => setShowCrmModal(false)}
         />
       )}
+
+      {showAmoModal && (
+        <AmoSettingsModal
+          tenantId={tenantId}
+          onSaved={() => setShowAmoModal(false)}
+          onClose={() => setShowAmoModal(false)}
+        />
+      )}
+
     </>
   )
 }
@@ -189,6 +203,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/embed/:conversationId" element={<EmbedChat />} />
           <Route element={<Shell />}>
             <Route path="/" element={<Navigate to="/chats" replace />} />
             <Route path="/chats/*" element={<ChatDashboard />} />

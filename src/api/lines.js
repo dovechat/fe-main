@@ -86,6 +86,20 @@ export const updateVk = async (tenantId, lineId, data) => {
   return response.data
 }
 
+export const startVkOAuth = async (tenantId, lineId) => {
+  const res = await apiClient.get(`/tenants/${tenantId}/lines/${lineId}/account/vk/oauth/start`)
+  return res.data
+}
+export const confirmVkOAuth = async (tenantId, lineId, payload, groupId) => {
+  const res = await apiClient.post(`/tenants/${tenantId}/lines/${lineId}/account/vk/oauth/confirm`, { payload, group_id: groupId })
+  return res.data
+}
+
+export const mockConnectVk = async (tenantId, lineId) => {
+  const res = await apiClient.post(`/tenants/${tenantId}/lines/${lineId}/account/vk/oauth/mock-connect`)
+  return res.data
+}
+
 export const updateWhatsAppGreen = async (tenantId, lineId, data) => {
   const response = await apiClient.post(`/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green`, {
     id_instance: data.idInstance,

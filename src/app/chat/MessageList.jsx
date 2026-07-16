@@ -1,9 +1,10 @@
-import { Clock, CheckCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, CheckCheck, Pencil, X } from 'lucide-react';
 import FileAttachment from './FileAttachment'
-
 const VITE_STORAGE_URL = import.meta.env.VITE_STORAGE_URL;
-
-export default function MessageList({ messages }) {
+export default function MessageList({ messages, onEdit, onDelete }) {
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '16px' }}>
       {messages.map((msg) => {
@@ -36,7 +37,7 @@ export default function MessageList({ messages }) {
                 {msg.media.map((m) => (
                   <div key={m.id} style={{ width: '200px', background: '#00088222', marginBottom: '4px' }}>
                     {m.mime_type?.startsWith('image/') ? (
-                      <img src={`${VITE_STORAGE_URL}/${m.id}`} style={{ maxWidth: '200px' }} />
+                      <img src={m.url} style={{ maxWidth: '200px' }} />
                     ) : (
                       <FileAttachment mimeType={m.mime_type} fileName={m.file_name} fileId={m.id} />
                     )}
@@ -53,9 +54,27 @@ export default function MessageList({ messages }) {
                 </div>
               )}
 
-              <p style={{ margin: 0 }}>{msg.text}</p>
+              {editingId === msg.id ? (
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <input
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <button onClick={() => { onEdit(msg.id, editText); setEditingId(null); }}>OK</button>
+                  <button onClick={() => setEditingId(null)}>Cancel</button>
+                </div>
+              ) : (
+                <p style={{ margin: 0 }}>{msg.text}</p>
+              )}
 
-              <div className="dc-conv-bubble-meta">
+                <div className="dc-conv-bubble-meta">
+                {isOutgoing && !msg.id.toString().startsWith('temp-') && (
+                  <>
+                    <Pencil size={12} style={{ cursor: 'pointer' }} onClick={() => { setEditingId(msg.id); setEditText(msg.text); }} />
+                    <X size={12} style={{ cursor: 'pointer' }} onClick={() => onDelete(msg.id)} />
+                  </>
+                )}
                 <Clock size={12} />
                 <span>
                   {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
@@ -81,7 +100,7 @@ export default function MessageList({ messages }) {
                 {msg.media.map((m) => (
                   <div key={m.id} style={{ width: '200px', background: '#00088222', marginBottom: '4px' }}>
                     {m.mime_type?.startsWith('image/') ? (
-                      <img src={`${VITE_STORAGE_URL}/${m.id}`} style={{ maxWidth: '200px' }} />
+                      <img src={m.url} style={{ maxWidth: '200px' }} />
                     ) : (
                       <FileAttachment mimeType={m.mime_type} fileName={m.file_name} fileId={m.id} />
                     )}

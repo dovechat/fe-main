@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Building2, Users, Pencil, Landmark, ArrowLeft } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
 import MembersList from './MembersList'
 
 
@@ -27,7 +28,14 @@ const PLACEHOLDER = {
   inn: '0000000000',
 }
 
-function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onEditCrm }) {
+function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onEditCrm, onEditAmo }) {
+  const { token } = useAuth()
+
+  const [showAmoForm, setShowAmoForm] = useState(false)
+  const [amoDomain, setAmoDomain] = useState('')
+  const [amoAccess, setAmoAccess] = useState('')
+  const [amoRefresh, setAmoRefresh] = useState('')
+
   const bd = tenant.banking_details || {}
   const [staffCount, setStaffCount] = useState(
     () => (tenant.employee_count != null ? tenant.employee_count : null),
@@ -164,8 +172,30 @@ function TenantDetails({ tenant, onEdit, onEditBanking, onBack, crmSettings, onE
                 </button>
 
 <button type="button" className="dc-btn dc-btn-outline" onClick={onEditCrm}>
-  Настройки CRM
+  Настройки Bitrix24
 </button>
+
+<button type="button" className="dc-btn dc-btn-outline" onClick={onEditAmo}>
+  Подключить AmoCRM
+</button>
+
+{showAmoForm && (
+  <div className="amo-form">
+    <input placeholder="Домен (например new1782329019.amocrm.ru)" value={amoDomain} onChange={e => setAmoDomain(e.target.value)} />
+    <input placeholder="Access token" value={amoAccess} onChange={e => setAmoAccess(e.target.value)} />
+    <input placeholder="Refresh token" value={amoRefresh} onChange={e => setAmoRefresh(e.target.value)} />
+    <button type="button" className="dc-btn dc-btn-primary" onClick={async () => {
+      await fetch('/crm/api/v1/install/amo/save-tokens', {
+        method: 'POST',
+        headers: {Authorization: `Bearer ${token}`, 'Content-Type': 'application/json'},
+        body: JSON.stringify({tenant_id: tenant.id, domain: amoDomain, access_token: amoAccess, refresh_token: amoRefresh})
+      })
+      setShowAmoForm(false)
+    }}>Сохранить</button>
+    <button type="button" className="dc-btn dc-btn-outline" onClick={() => setShowAmoForm(false)}>Отмена</button>
+  </div>
+)}
+
               </div>
             </div>
           </div>

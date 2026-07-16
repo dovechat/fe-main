@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { Paperclip, Smile, Send, Clock, CheckCheck } from 'lucide-react'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
-import { fetchConversation, fetchMessages, setConversationStatus } from './api'
+import { fetchConversation, fetchMessages, setConversationStatus, editMessage, deleteMessage } from './api'
 import api from './api'
 
-export default function ConversationPage({ conversationId }) {
+export default function ConversationPage({ conversationId, embedToken }) {
   const ws = useRef(null)
   const reconnectTimeout = useRef(null)
   const reconnectDelay = useRef(1000)
@@ -29,7 +29,7 @@ export default function ConversationPage({ conversationId }) {
 
     function connect() {
       if (!isMounted.current) return
-      const token = localStorage.getItem('token')
+      const token = embedToken || localStorage.getItem('token')
       const socket = new WebSocket(`${import.meta.env.VITE_WS_URL}ws/chat/${conversationId}?token=${token}`)
       ws.current = socket
 
@@ -64,7 +64,17 @@ export default function ConversationPage({ conversationId }) {
               ? { ...msg, status: data.data.status, media: data.data.media?.length ? data.data.media : msg.media }
               : msg
           ))
-        }
+        } else if (data.type === 'message_update') {
+            if (data.data.type === 'delete') {
+              setMessages(prev => prev.filter(m => String(m.id) !== String(data.data.message_id)))
+            } else if (data.data.type === 'edit') {
+              setMessages(prev => prev.map(m =>
+                String(m.id) === String(data.data.message_id)
+                  ? { ...m, text: data.data.text }
+                  : m
+              ))
+            }
+          }
       }
 
       socket.onclose = (event) => {
@@ -89,10 +99,12 @@ export default function ConversationPage({ conversationId }) {
   }, [conversationId, conversation?.client_phone])
 
   useEffect(() => {
+    if (embedToken) localStorage.setItem('token', embedToken)
     if (conversationId) loadConversation()
   }, [conversationId])
 
   async function loadConversation() {
+    console.log('API_URL:', import.meta.env.VITE_API_URL)
     try {
       setLoading(true)
       const [convData, messagesData] = await Promise.all([
@@ -220,7 +232,23 @@ export default function ConversationPage({ conversationId }) {
 
       <div className="dc-conv-messages">
         <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
-          <MessageList messages={messages} />
+          <MessageList
+            messages={messages}
+            onEdit={async (id, text) => {
+              try {
+                await editMessage(id, text)
+              } catch (e) {
+                console.error('editMessage failed:', e)
+              }
+            }}
+            onDelete={async (id) => {
+              try {
+                await deleteMessage(id)
+              } catch (e) {
+                console.error('deleteMessage failed:', e)
+              }
+            }}
+          />
           <div ref={messagesEndRef} />
         </div>
       </div>

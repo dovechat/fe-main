@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { getChannelAccount, updateTelegramBot, updateTelegramUser, updateVk, updateWhatsAppGreen, updateWaba } from '../../api/lines'
+import VkOAuthConnect from './VkOAuthConnect'
 import Button from './Button'
 import Input from './Input'
 import apiClient from '../../services/accountClient'
@@ -265,7 +266,7 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         `/tenants/${tenantId}/lines/${lineId}/account/whatsapp-green/connect`
       )
       setQrCode(response.data.qr.qr)
-      const { id_instance, api_token } = response.data
+      const { id_instance, api_token } = response.data.qr
       await updateWhatsAppGreen(tenantId, lineId, {})
       pollGreenStatus(id_instance, api_token)
     } catch (err) {
@@ -412,6 +413,14 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
 
       case 'vk':
         return (
+          <>
+          <VkOAuthConnect
+            tenantId={tenantId}
+            lineId={lineId}
+            onDone={onBack}
+          />
+
+          {/*
           <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
             <div style={{ width: '200px', flexShrink: 0 }}>
               <Input
@@ -460,7 +469,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
               все параметры вводятся <strong>только</strong> в нашем интерфейсе, в этой форме.
             </p>
           </div>
-        )
+          */}
+         </>
+        ) 
 
       case 'whatsapp_green':
         return (
@@ -542,11 +553,11 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
             {error && <p className="error" style={{ marginTop: '12px' }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-              {channelType !== 'whatsapp_green' && (
+              {/* channelType !== 'whatsapp_green' && (
                 <button type="submit" className="dc-btn dc-btn-primary" disabled={saving} style={{ flex: 1 }}>
                   {saving ? 'Сохранение...' : 'Сохранить и подключить'}
                 </button>
-              )}
+              ) */}
               <button type="button" className="dc-btn dc-btn-outline" onClick={onBack} style={{ flex: 1 }}>
                 Отмена
               </button>

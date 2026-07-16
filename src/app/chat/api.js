@@ -92,4 +92,14 @@ export async function setConversationStatus(conversationId, isClosed) {
     return response.data;
 }
 
+export async function editMessage(messageId, text) {
+  const response = await api.patch(`/messages/${messageId}`, { text });
+  return response.data;
+}
+
+export async function deleteMessage(messageId) {
+  const response = await api.delete(`/messages/${messageId}`);
+  return response.data;
+}
+
 export default api;
