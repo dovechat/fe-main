@@ -51,6 +51,13 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
             />
             <span className="dc-muted-xs">Создавать контакт автоматически</span>
 
+          </label>
+          <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" onClick={() => setShowInstruction(true)}>
+            Инструкция
+          </button>
+        </div>
+
+
             <div className="form-group" style={{ marginTop: '0.75rem' }}>
               <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Bitrix Client ID</label>
               <input className="dc-input" value={bitrixClientId} onChange={(e) => setBitrixClientId(e.target.value)} />
@@ -67,11 +74,6 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
               )}
             </div>
 
-          </label>
-          <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" onClick={() => setShowInstruction(true)}>
-            Инструкция
-          </button>
-        </div>
         {error && <p className="error" style={{ margin: '0.75rem 0 0' }}>{error}</p>}
         <div className="dc-detail-toolbar" style={{ marginTop: '1.25rem' }}>
           <button type="button" className="dc-btn dc-btn-outline" onClick={onClose}>Отмена</button>
