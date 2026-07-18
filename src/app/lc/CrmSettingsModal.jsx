@@ -7,6 +7,8 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showInstruction, setShowInstruction] = useState(false)
+  const [bitrixClientId, setBitrixClientId] = useState('')
+  const [bitrixClientSecret, setBitrixClientSecret] = useState(settings?.bitrix_client_secret || '')
 
   const handleSave = async () => {
     setLoading(true)
@@ -15,6 +17,8 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
       const updated = await updateCrmSettings(tenantId, {
         no_deal_action: noDealAction,
         auto_create_contact: autoCreateContact,
+        bitrix_client_id: bitrixClientId,
+        bitrix_client_secret: bitrixClientSecret,
       })
       onSaved(updated)
     } catch {
@@ -46,6 +50,23 @@ function CrmSettingsModal({ tenantId, settings, onSaved, onClose }) {
               onChange={(e) => setAutoCreateContact(e.target.checked)}
             />
             <span className="dc-muted-xs">Создавать контакт автоматически</span>
+
+            <div className="form-group" style={{ marginTop: '0.75rem' }}>
+              <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Bitrix Client ID</label>
+              <input className="dc-input" value={bitrixClientId} onChange={(e) => setBitrixClientId(e.target.value)} />
+              {settings?.bitrix_client_id_set && !bitrixClientId && (
+                <p className="dc-muted-xs">уже задано, оставьте пустым чтобы не менять</p>
+              )}
+            </div>
+
+            <div className="form-group" style={{ marginTop: '0.75rem' }}>
+              <label className="dc-muted-xs" style={{ display: 'block', marginBottom: '0.35rem' }}>Bitrix Client Secret</label>
+              <input className="dc-input" type="password" value={bitrixClientSecret} onChange={(e) => setBitrixClientSecret(e.target.value)} />
+              {settings?.bitrix_client_secret_set && !bitrixClientSecret && (
+                <p className="dc-muted-xs">уже задано, оставьте пустым чтобы не менять</p>
+              )}
+            </div>
+
           </label>
           <button type="button" className="dc-btn dc-btn-sm dc-btn-outline" onClick={() => setShowInstruction(true)}>
             Инструкция
