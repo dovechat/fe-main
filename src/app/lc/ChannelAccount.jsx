@@ -244,7 +244,9 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
         return
       }
       try {
+        console.log('***** try:')
         const response = await fetch(`${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`)
+        console.log('***** try: response', response.json())
         const data = await response.json()
         console.log('***** qr status data:', data)
         if (data.status === 'authorized') {
