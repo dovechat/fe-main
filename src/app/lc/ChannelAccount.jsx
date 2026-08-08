@@ -284,23 +284,11 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
   const pollGreenStatus = (idInstance, apiToken) => {
       pollIntervalRef.current = setInterval(async () => {
           try {
-              const [accountsRes, stateRes] = await Promise.allSettled([
-                  getChannelAccount(tenantId, lineId),
-                  fetch(`https://api.green-api.com/waInstance${idInstance}/getStateInstance/${apiToken}`)
-                      .then(r => r.json())
-              ])
-              if (accountsRes.status === 'fulfilled') {
-                  const accounts = accountsRes.value
-                  const account = Array.isArray(accounts)
-                      ? accounts.find(a => a.channel_type === 'whatsapp_green')
-                      : accounts
-                  if (account?.connection_status === 'connected') {
-                      clearInterval(pollIntervalRef.current)
-                      onBack()
-                      return
-                  }
-              }
-              if (stateRes.status === 'fulfilled' && stateRes.value?.stateInstance === 'authorized') {
+              const accounts = await getChannelAccount(tenantId, lineId)
+              const account = Array.isArray(accounts)
+                  ? accounts.find(a => a.channel_type === 'whatsapp_green')
+                  : accounts
+              if (account?.connection_status === 'connected') {
                   clearInterval(pollIntervalRef.current)
                   onBack()
               }
