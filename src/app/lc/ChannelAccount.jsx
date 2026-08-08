@@ -246,9 +246,10 @@ function ChannelAccount({ tenantId, lineId, channelType, onBack }) {
       try {
         const response = await fetch(`${API_URL}/auth/qr/status?token=${encodeURIComponent(token)}`)
         const data = await response.json()
+        console.log('***** qr status data:', data)
         if (data.status === 'authorized') {
           clearInterval(interval)
-          await updateTelegramUser(tenantId, lineId, { session_string: data.session })
+          await updateTelegramUser(tenantId, lineId, { session_string: data.session, phone: data.phone })
           alert('Аккаунт успешно авторизован!')
           onBack()
         }
