@@ -4,6 +4,7 @@ import { Paperclip, Send, FileText } from 'lucide-react';
 const WABA_TEMPLATES = [
   { name: 'disclaimer', language: 'en', components: [] },
   { name: 'first_welcome_messsage', language: 'en', components: [{ type: 'body', parameters: [{ type: 'text', text: 'DoveChat' }] }] },
+  { name: 'interactive_template_sandbox', language: 'en', components: [] },
 ];
 
 export default function MessageInput({ onSend, onSendTemplate, disabled, channelType }) {
