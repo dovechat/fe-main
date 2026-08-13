@@ -98,10 +98,10 @@ export default function ConversationPage({ conversationId, embedToken }) {
       socket.onerror = (err) => console.error('WS error:', err)
     }
 
-    const localSocket = connect()
+    connect()
     return () => {
       clearTimeout(reconnectTimeout.current)
-      localSocket?.close(1000)
+      ws.current?.close(1000)
     }
   }, [conversationId])
 
