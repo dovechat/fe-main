@@ -103,7 +103,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
       clearTimeout(reconnectTimeout.current)
       ws.current?.close(1000)
     }
-  }, [conversationId, conversation?.client_phone])
+  }, [conversationId])
 
   useEffect(() => {
     if (embedToken) localStorage.setItem('token', embedToken)
