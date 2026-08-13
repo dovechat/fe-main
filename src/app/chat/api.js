@@ -68,7 +68,9 @@ export async function fetchLineChannels(lineId) {
 }
 
 export async function fetchMessages(conversationId, skip = 0, limit = 20) {
+  console.log('fetchMessages request', { conversationId, skip, limit })
   const response = await api.get(`/conversations/${conversationId}/messages`, { params: { skip, limit } });
+  console.log('fetchMessages response', response.status, response.data)
   return response.data;
 }
 

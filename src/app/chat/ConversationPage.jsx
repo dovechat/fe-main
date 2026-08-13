@@ -135,29 +135,30 @@ export default function ConversationPage({ conversationId, embedToken }) {
   }
 
 
-  async function loadMoreMessages() {
-      if (loadingMore || !hasMoreMessages) return
-      const el = messagesScrollRef.current
-      const prevHeight = el?.scrollHeight || 0
-      setLoadingMore(true)
-      try {
-        const older = await fetchMessages(conversationId, messages.length, 20)
-        isLoadingOlderRef.current = true
-        setMessages(prev => [...older, ...prev])
-        setHasMoreMessages(older.length === 20)
-        requestAnimationFrame(() => {
-          if (el) el.scrollTop = el.scrollHeight - prevHeight
-        })
-      } catch (error) {
-        console.error('Failed to load more messages:', error)
-      } finally {
-        setLoadingMore(false)
-      }
+    async function loadMoreMessages() {
+    console.log('loadMore called', { loadingMore, hasMoreMessages, len: messages.length })
+    if (loadingMore || !hasMoreMessages) { console.log('loadMore blocked'); return }
+    const el = messagesScrollRef.current
+    const prevHeight = el?.scrollHeight || 0
+    console.log('prevHeight', prevHeight)
+    setLoadingMore(true)
+    try {
+      const older = await fetchMessages(conversationId, messages.length, 20)
+      console.log('fetched older', older.length, older)
+      isLoadingOlderRef.current = true
+      setMessages(prev => [...older, ...prev])
+      setHasMoreMessages(older.length === 20)
+      console.log('hasMore set to', older.length === 20)
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight - prevHeight
+        console.log('scrollTop restored to', el?.scrollTop)
+      })
+    } catch (error) {
+      console.error('loadMore error:', error)
+    } finally {
+      setLoadingMore(false)
     }
-    function handleScroll(e) {
-      console.log('scroll', e.target.scrollTop)
-      if (e.target.scrollTop < 100) loadMoreMessages()
-    }
+  }
 
   useEffect(() => {
     if (isLoadingOlderRef.current) { isLoadingOlderRef.current = false; return }
