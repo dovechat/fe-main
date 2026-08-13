@@ -25,8 +25,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
   }, [])
 
   useEffect(() => {
-    console.log('guard check', conversation?.id, conversationId, typeof conversation?.id, typeof conversationId)
-    if (!conversationId || !conversation || conversation.id !== conversationId) return
+    if (!conversationId || !conversation) return
 
     console.log('effect fired', conversationId, Date.now())
 
@@ -34,9 +33,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
       if (!isMounted.current) return
       console.log('connect() called', Date.now())
       const token = embedToken || localStorage.getItem('token')
-      console.log('before new WebSocket', Date.now())
       const socket = new WebSocket(`${import.meta.env.VITE_WS_URL}ws/chat/${conversationId}?token=${token}`)
-      console.log('after new WebSocket', Date.now())
       ws.current = socket
 
       socket.onopen = () => {
@@ -104,11 +101,10 @@ export default function ConversationPage({ conversationId, embedToken }) {
       clearTimeout(reconnectTimeout.current)
       ws.current?.close(1000)
     }
-  }, [conversationId])
+  }, [conversationId, conversation?.client_phone])
 
   useEffect(() => {
     if (embedToken) localStorage.setItem('token', embedToken)
-    setConversation(null)
     if (conversationId) loadConversation()
   }, [conversationId])
 
