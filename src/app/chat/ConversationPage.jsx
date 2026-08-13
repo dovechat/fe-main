@@ -22,6 +22,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
   const [hasMoreMessages, setHasMoreMessages] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const messagesScrollRef = useRef(null)
+  const isLoadingOlderRef = useRef(false)
 
   useEffect(() => {
     isMounted.current = true
@@ -141,6 +142,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
       setLoadingMore(true)
       try {
         const older = await fetchMessages(conversationId, messages.length, 20)
+        isLoadingOlderRef.current = true
         setMessages(prev => [...older, ...prev])
         setHasMoreMessages(older.length === 20)
         requestAnimationFrame(() => {
@@ -158,6 +160,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
 
 
   useEffect(() => {
+    if (isLoadingOlderRef.current) { isLoadingOlderRef.current = false; return }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
