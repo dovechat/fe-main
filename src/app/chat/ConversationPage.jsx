@@ -78,6 +78,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
       }
 
       socket.onclose = (event) => {
+        console.log('WS closed:', event.code, event.reason)
         if (!isMounted.current) return
         setConnectionStatus(false)
         if (event.code === 1000 || event.code === 1008) return
