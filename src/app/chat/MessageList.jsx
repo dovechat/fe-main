@@ -33,7 +33,7 @@ export default function MessageList({ messages, onEdit, onDelete }) {
                 {msg.media.map((m) => (
                   <div key={m.id} style={{ width: '200px', background: '#00088222', marginBottom: '4px' }}>
                     {m.mime_type?.startsWith('image/') ? (
-                      <img src={m.url} style={{ maxWidth: '200px' }} />
+                      <img src={m.url} loading="lazy" style={{ maxWidth: '200px' }} />
                     ) : (
                       <FileAttachment mimeType={m.mime_type} fileName={m.file_name} fileId={m.id} />
                     )}
@@ -96,7 +96,7 @@ export default function MessageList({ messages, onEdit, onDelete }) {
                 {msg.media.map((m) => (
                   <div key={m.id} style={{ width: '200px', background: '#00088222', marginBottom: '4px' }}>
                     {m.mime_type?.startsWith('image/') ? (
-                      <img src={m.url} style={{ maxWidth: '200px' }} />
+                      <img src={m.url} loading="lazy" style={{ maxWidth: '200px' }} />
                     ) : (
                       <FileAttachment mimeType={m.mime_type} fileName={m.file_name} fileId={m.id} />
                     )}
