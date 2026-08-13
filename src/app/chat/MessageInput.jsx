@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { Paperclip, Send, FileText } from 'lucide-react';
 
 const WABA_TEMPLATES = [
-  { name: 'disclaimer', language: 'ru', components: [] },
+  { name: 'disclaimer', language: 'en', components: [] },
   { name: 'first_welcome_messsage', language: 'en', components: [{ type: 'body', parameters: [{ type: 'text', text: 'DoveChat' }] }] },
 ];
 
