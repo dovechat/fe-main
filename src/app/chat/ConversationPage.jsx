@@ -19,6 +19,10 @@ export default function ConversationPage({ conversationId, embedToken }) {
   const [connectionStatus, setConnectionStatus] = useState(false)
   const messagesEndRef = useRef(null)
 
+  const [hasMoreMessages, setHasMoreMessages] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const messagesScrollRef = useRef(null)
+
   useEffect(() => {
     isMounted.current = true
     return () => { isMounted.current = false }
@@ -128,6 +132,30 @@ export default function ConversationPage({ conversationId, embedToken }) {
       setLoading(false)
     }
   }
+
+
+  async function loadMoreMessages() {
+      if (loadingMore || !hasMoreMessages) return
+      const el = messagesScrollRef.current
+      const prevHeight = el?.scrollHeight || 0
+      setLoadingMore(true)
+      try {
+        const older = await fetchMessages(conversationId, messages.length, 20)
+        setMessages(prev => [...older, ...prev])
+        setHasMoreMessages(older.length === 20)
+        requestAnimationFrame(() => {
+          if (el) el.scrollTop = el.scrollHeight - prevHeight
+        })
+      } catch (error) {
+        console.error('Failed to load more messages:', error)
+      } finally {
+        setLoadingMore(false)
+      }
+    }
+    function handleScroll(e) {
+      if (e.target.scrollTop < 100) loadMoreMessages()
+    }
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -239,7 +267,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
         </div>
       </div>
 
-      <div className="dc-conv-messages">
+      <div className="dc-conv-messages" ref={messagesScrollRef} onScroll={handleScroll}>
         <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
           <MessageList
             messages={messages}
