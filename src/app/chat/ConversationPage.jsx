@@ -24,11 +24,12 @@ export default function ConversationPage({ conversationId, embedToken }) {
     return () => { isMounted.current = false }
   }, [])
 
+  const connectedIdRef = useRef(null)
   useEffect(() => {
     if (!conversationId || !conversation) return
-
+    if (connectedIdRef.current === conversationId && ws.current && ws.current.readyState <= 1) return
+    connectedIdRef.current = conversationId
     console.log('effect fired', conversationId, Date.now())
-
     function connect() {
       if (!isMounted.current) return
       console.log('connect() called', Date.now())
@@ -99,7 +100,10 @@ export default function ConversationPage({ conversationId, embedToken }) {
     connect()
     return () => {
       clearTimeout(reconnectTimeout.current)
-      ws.current?.close(1000)
+      if (ws.current) {
+        ws.current.onclose = null
+        ws.current.close(1000)
+      }
     }
   }, [conversationId, conversation?.client_phone])
 
