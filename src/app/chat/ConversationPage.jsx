@@ -27,8 +27,11 @@ export default function ConversationPage({ conversationId, embedToken }) {
   useEffect(() => {
     if (!conversationId || !conversation) return
 
+    console.log('effect fired', conversationId, Date.now())
+
     function connect() {
       if (!isMounted.current) return
+      console.log('connect() called', Date.now())
       const token = embedToken || localStorage.getItem('token')
       const socket = new WebSocket(`${import.meta.env.VITE_WS_URL}ws/chat/${conversationId}?token=${token}`)
       ws.current = socket
