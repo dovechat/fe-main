@@ -20,14 +20,10 @@ export default function MessageList({ messages, onEdit, onDelete }) {
         } else if (msg.raw_content && msg.raw_content.media) {
           if (msg.raw_content.media.document) {
             if (msg.raw_content.media.document.mime_type) {
-              console.log('document.mime_type: define ', msg.raw_content.media.document.mime_type);
               mimeType = msg.raw_content.media.document.mime_type;
             }
           }
         }
-
-        console.log("document.mime_type mimeType ", mimeType);
-        console.log('document.mime_type msg:', msg);
 
         return (
           <div key={msg.id} className={`dc-conv-msg-row ${isOutgoing ? 'agent' : ''}`}>
