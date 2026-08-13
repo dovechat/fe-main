@@ -135,7 +135,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
   }
 
 
-    async function loadMoreMessages() {
+  async function loadMoreMessages() {
     console.log('loadMore called', { loadingMore, hasMoreMessages, len: messages.length })
     if (loadingMore || !hasMoreMessages) { console.log('loadMore blocked'); return }
     const el = messagesScrollRef.current
@@ -158,6 +158,11 @@ export default function ConversationPage({ conversationId, embedToken }) {
     } finally {
       setLoadingMore(false)
     }
+  }
+
+  function handleScroll(e) {
+    console.log('scroll', e.target.scrollTop)
+    if (e.target.scrollTop < 100) loadMoreMessages()
   }
 
   useEffect(() => {
