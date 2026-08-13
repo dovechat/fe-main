@@ -33,7 +33,9 @@ export default function ConversationPage({ conversationId, embedToken }) {
       if (!isMounted.current) return
       console.log('connect() called', Date.now())
       const token = embedToken || localStorage.getItem('token')
+      console.log('before new WebSocket', Date.now())
       const socket = new WebSocket(`${import.meta.env.VITE_WS_URL}ws/chat/${conversationId}?token=${token}`)
+      console.log('after new WebSocket', Date.now())
       ws.current = socket
 
       socket.onopen = () => {
