@@ -25,7 +25,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
   }, [])
 
   useEffect(() => {
-    if (!conversationId || !conversation) return
+    if (!conversationId || !conversation || conversation.id !== conversationId) return
 
     console.log('effect fired', conversationId, Date.now())
 
@@ -107,6 +107,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
 
   useEffect(() => {
     if (embedToken) localStorage.setItem('token', embedToken)
+    setConversation(null)
     if (conversationId) loadConversation()
   }, [conversationId])
 
