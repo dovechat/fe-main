@@ -155,9 +155,9 @@ export default function ConversationPage({ conversationId, embedToken }) {
       }
     }
     function handleScroll(e) {
+      console.log('scroll', e.target.scrollTop)
       if (e.target.scrollTop < 100) loadMoreMessages()
     }
-
 
   useEffect(() => {
     if (isLoadingOlderRef.current) { isLoadingOlderRef.current = false; return }
