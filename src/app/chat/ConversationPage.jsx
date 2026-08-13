@@ -25,6 +25,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
   }, [])
 
   useEffect(() => {
+    console.log('guard check', conversation?.id, conversationId, typeof conversation?.id, typeof conversationId)
     if (!conversationId || !conversation || conversation.id !== conversationId) return
 
     console.log('effect fired', conversationId, Date.now())
