@@ -37,6 +37,7 @@ export default function ConversationPage({ conversationId, embedToken }) {
       ws.current = socket
 
       socket.onopen = () => {
+        console.log('onopen fired', Date.now())
         if (!isMounted.current) return
         setConnectionStatus(true)
         reconnectDelay.current = 1000
